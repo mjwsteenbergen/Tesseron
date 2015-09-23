@@ -1,3 +1,5 @@
 build/
 devel/
 src/CMakeLists.txt
+Tesseron.vcxproj
+Tesseron.vcxproj.filters
