@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 	* buffer up before throwing some away.
 	*/
 	// %Tag(PUBLISHER)%
-	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
+	Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
 	// %EndTag(PUBLISHER)%
 
 	// %Tag(LOOP_RATE)%
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 	*/
 	// %Tag(ROS_OK)%
 	int count = 0;
-	while (ros::ok())
+	while (ok())
 	{
 		// %EndTag(ROS_OK)%
 		/**
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 		// %EndTag(PUBLISH)%
 
 		// %Tag(SPINONCE)%
-		ros::spinOnce();
+		spinOnce();
 		// %EndTag(SPINONCE)%
 
 		// %Tag(RATE_SLEEP)%
