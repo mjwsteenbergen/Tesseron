@@ -27,6 +27,8 @@
 // %Tag(FULLTEXT)%
 // %Tag(ROS_HEADER)%
 #include "ros/ros.h"
+#include "ros/publisher.h"
+
 // %EndTag(ROS_HEADER)%
 // %Tag(MSG_HEADER)%
 #include "std_msgs/String.h"
@@ -79,8 +81,10 @@ int main(int argc, char **argv)
 	* than we can send them, the number here specifies how many messages to
 	* buffer up before throwing some away.
 	*/
+	
+	
 	// %Tag(PUBLISHER)%
-	Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
+	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
 	// %EndTag(PUBLISHER)%
 
 	// %Tag(LOOP_RATE)%

@@ -8,10 +8,10 @@
 #ifndef TESTPACL_PUBLISHER_H_
 #define TESTPACL_PUBLISHER_H_
 
-class Publisher {
+class Poublisher {
 public:
-	Publisher();
-	virtual ~Publisher();
+	Poublisher();
+	virtual ~Poublisher();
 };
 
 #endif /* TESTPACL_PUBLISHER_H_ */
