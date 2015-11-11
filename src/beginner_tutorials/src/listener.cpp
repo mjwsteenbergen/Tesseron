@@ -1,12 +1,78 @@
+#include <ldap.h>
 #include "ros/ros.h"
-#include "std_msgs/String.h"
+#include "sensor_msgs/Image.h"
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/opencv.hpp"
+
+using namespace cv;
 
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
-void chatterCallback(const std_msgs::String::ConstPtr& msg)
+void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
-  ROS_INFO("I heard: [%s]", msg->data.c_str());
+    ROS_INFO("I heard: [%d]", msg->data);
+
+    Mat im = msg->data.;
+
+    // Set up the detector with default parameters.
+    cv::SimpleBlobDetector detector;
+
+    // Detect blobs.
+    std::vector<KeyPoint> keypoints;
+    detector.detect( im, keypoints);
+
+    // Draw detected blobs as red circles.
+    // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
+    Mat im_with_keypoints;
+    drawKeypoints( im, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+    // Show blobs
+    imshow("keypoints", im_with_keypoints );
+    waitKey(0);
+
+    // Setup SimpleBlobDetector parameters.
+    SimpleBlobDetector::Params params;
+
+    // Change thresholds
+    params.minThreshold = 10;
+    params.maxThreshold = 200;
+
+    // Filter by Area.
+    params.filterByArea = true;
+    params.minArea = 1500;
+
+    // Filter by Circularity
+    params.filterByCircularity = true;
+    params.minCircularity = 0.1;
+
+    // Filter by Convexity
+    params.filterByConvexity = true;
+    params.minConvexity = 0.87;
+
+    // Filter by Inertia
+    params.filterByInertia = true;
+    params.minInertiaRatio = 0.01;
+
+    #if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
+
+    // Set up detector with params
+    SimpleBlobDetector detector(params);
+
+    // You can use the detector this way
+    // detector.detect( im, keypoints);
+
+    #else
+
+    // Set up detector with params
+    Ptr<SimpleBlobDetector> detector2 = SimpleBlobDetector::create(params);
+
+    // SimpleBlobDetector::create creates a smart pointer.
+    // So you need to use arrow ( ->) instead of dot ( . )
+    // detector->detect( im, keypoints);
+
+#endif
 }
 
 int main(int argc, char **argv)
@@ -45,7 +111,7 @@ int main(int argc, char **argv)
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-  ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
+  ros::Subscriber sub = n.subscribe("/usb_cam/camera_info", 1000, chatterCallback);
 
   /**
    * ros::spin() will enter a loop, pumping callbacks.  With this version, all
