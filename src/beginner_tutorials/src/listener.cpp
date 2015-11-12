@@ -1,9 +1,7 @@
-#include <ldap.h>
 #include "ros/ros.h"
-#include "sensor_msgs/Image.h"
-#include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "opencv2/opencv.hpp"
+#include "cv_bridge/cv_bridge.h"
 
 using namespace cv;
 
@@ -12,12 +10,13 @@ using namespace cv;
  */
 void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
-    ROS_INFO("I heard: [%d]", msg->data);
+    //ROS_INFO("I heard: [%d]", msg->data);
 
-    Mat im = msg->data.;
+    Mat im = cv_bridge::toCvCopy(msg)->image;
+
 
     // Set up the detector with default parameters.
-    cv::SimpleBlobDetector detector;
+    SimpleBlobDetector detector;
 
     // Detect blobs.
     std::vector<KeyPoint> keypoints;
