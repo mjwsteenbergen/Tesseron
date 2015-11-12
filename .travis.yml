@@ -2,6 +2,7 @@
 # Works with all MoveIt! repositories/branches
 # Author: Dave Coleman, Jonathan Bohren
 sudo: true
+dist: trusty
 language:
   - cpp
 compiler:
@@ -14,7 +15,6 @@ before_install: # Use this to prepare the system to install prerequisites or dep
   - export ROS_DISTRO=indigo
   - export CI_SOURCE_PATH=$(pwd)
   - export REPOSITORY_NAME=${PWD##*/}
-  - echo "Testing branch $TRAVIS_BRANCH of $REPOSITORY_NAME"
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
   - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
   - sudo apt-get update -qq
