@@ -19,7 +19,7 @@ void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
     SimpleBlobDetector detector;
 
     // Detect blobs.
-    std::vector<KeyPoint> keypoints;
+    std::vector<cv::KeyPoint> keypoints;
     detector.detect( im, keypoints);
 
     // Draw detected blobs as red circles.
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-  ros::Subscriber sub = n.subscribe("/usb_cam/camera_info", 1000, chatterCallback);
+  ros::Subscriber sub = n.subscribe("/usb_cam/image_raw", 1000, chatterCallback);
 
   /**
    * ros::spin() will enter a loop, pumping callbacks.  With this version, all
