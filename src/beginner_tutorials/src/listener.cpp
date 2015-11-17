@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include <opencv2/highgui/highgui.hpp>
+#include <FreeImage.h>
 #include "opencv2/opencv.hpp"
 #include "cv_bridge/cv_bridge.h"
 
@@ -11,8 +12,8 @@ using namespace cv;
 void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
     //ROS_INFO("I heard: [%d]", msg->data);
-
-    Mat im = cv_bridge::toCvCopy(msg)->image;
+    //Mat im = cv_bridge::toCvCopy(msg)->image;
+    Mat im = imread("/home/newnottakenname/Coding/Tesseron/src/webcam/src/Mosaic.jpg", IMREAD_GRAYSCALE);
 
 
     // Set up the detector with default parameters.
