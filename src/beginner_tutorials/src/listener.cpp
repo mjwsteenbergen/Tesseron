@@ -1,10 +1,14 @@
 #include "ros/ros.h"
 #include <opencv2/highgui/highgui.hpp>
-#include <FreeImage.h>
 #include "opencv2/opencv.hpp"
 #include "cv_bridge/cv_bridge.h"
 
 using namespace cv;
+using namespace std;
+
+Point2f computeIntersect(Vec2f line1, Vec2f line2);
+vector<Point2f> lineToPointPair(Vec2f line);
+bool acceptLinePair(Vec2f line1, Vec2f line2, float minTheta);
 
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
@@ -12,67 +16,110 @@ using namespace cv;
 void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
     //ROS_INFO("I heard: [%d]", msg->data);
-    //Mat im = cv_bridge::toCvCopy(msg)->image;
-    Mat im = imread("/home/newnottakenname/Coding/Tesseron/src/webcam/src/Mosaic.jpg", IMREAD_GRAYSCALE);
+    cv::Mat occludedSquare = cv_bridge::toCvCopy(msg)->image;
+    //cv::Mat im = cv::imread("/home/newnottakenname/Coding/Tesseron/src/webcam/src/Mosaic.jpg", cv::IMREAD_GRAYSCALE);
 
+    if(occludedSquare.empty())
+    {
+        return;
+    }
 
-    // Set up the detector with default parameters.
-    SimpleBlobDetector detector;
+    resize(occludedSquare, occludedSquare, Size(0, 0), 0.5, 0.5);
 
-    // Detect blobs.
-    std::vector<cv::KeyPoint> keypoints;
-    detector.detect( im, keypoints);
+    Mat occludedSquare8u;
+    cvtColor(occludedSquare, occludedSquare8u, CV_BGRA2GRAY);
 
-    // Draw detected blobs as red circles.
-    // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
-    Mat im_with_keypoints;
-    drawKeypoints( im, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    Mat thresh;
+    threshold(occludedSquare8u, thresh, 200.0, 255.0, THRESH_BINARY);
 
-    // Show blobs
-    imshow("keypoints", im_with_keypoints );
-    waitKey(0);
+    GaussianBlur(thresh, thresh, Size(7, 7), 2.0, 2.0);
 
-    // Setup SimpleBlobDetector parameters.
-    SimpleBlobDetector::Params params;
+    Mat edges;
+    Canny(thresh, edges, 66.0, 133.0, 3);
 
-    // Change thresholds
-    params.minThreshold = 10;
-    params.maxThreshold = 200;
+    vector<Vec2f> lines;
+    HoughLines( edges, lines, 1, CV_PI/180, 50, 0, 0 );
 
-    // Filter by Area.
-    params.filterByArea = true;
-    params.minArea = 1500;
+    cout << "Detected " << lines.size() << " lines." << endl;
 
-    // Filter by Circularity
-    params.filterByCircularity = true;
-    params.minCircularity = 0.1;
+    // compute the intersection from the lines detected...
+    vector<Point2f> intersections;
+    for( size_t i = 0; i < lines.size(); i++ )
+    {
+        for(size_t j = 0; j < lines.size(); j++)
+        {
+            Vec2f line1 = lines[i];
+            Vec2f line2 = lines[j];
+            if(acceptLinePair(line1, line2, CV_PI / 32))
+            {
+                Point2f intersection = computeIntersect(line1, line2);
+                intersections.push_back(intersection);
+            }
+        }
 
-    // Filter by Convexity
-    params.filterByConvexity = true;
-    params.minConvexity = 0.87;
+    }
 
-    // Filter by Inertia
-    params.filterByInertia = true;
-    params.minInertiaRatio = 0.01;
+    if(intersections.size() > 0)
+    {
+        vector<Point2f>::iterator i;
+        for(i = intersections.begin(); i != intersections.end(); ++i)
+        {
+            cout << "Intersection is " << i->x << ", " << i->y << endl;
+            circle(occludedSquare, *i, 1, Scalar(0, 255, 0), 3);
+        }
+    }
 
-    #if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
+    imshow("intersect", occludedSquare);
+    waitKey(30);
 
-    // Set up detector with params
-    SimpleBlobDetector detector(params);
+    return;
+}
 
-    // You can use the detector this way
-    // detector.detect( im, keypoints);
+bool acceptLinePair(Vec2f line1, Vec2f line2, float minTheta)
+{
+    float theta1 = line1[1], theta2 = line2[1];
 
-    #else
+    if(theta1 < minTheta)
+    {
+        theta1 += CV_PI; // dealing with 0 and 180 ambiguities...
+    }
 
-    // Set up detector with params
-    Ptr<SimpleBlobDetector> detector2 = SimpleBlobDetector::create(params);
+    if(theta2 < minTheta)
+    {
+        theta2 += CV_PI; // dealing with 0 and 180 ambiguities...
+    }
 
-    // SimpleBlobDetector::create creates a smart pointer.
-    // So you need to use arrow ( ->) instead of dot ( . )
-    // detector->detect( im, keypoints);
+    return abs(theta1 - theta2) > minTheta;
+}
 
-#endif
+// the long nasty wikipedia line-intersection equation...bleh...
+Point2f computeIntersect(Vec2f line1, Vec2f line2)
+{
+    vector<Point2f> p1 = lineToPointPair(line1);
+    vector<Point2f> p2 = lineToPointPair(line2);
+
+    float denom = (p1[0].x - p1[1].x)*(p2[0].y - p2[1].y) - (p1[0].y - p1[1].y)*(p2[0].x - p2[1].x);
+    Point2f intersect(((p1[0].x*p1[1].y - p1[0].y*p1[1].x)*(p2[0].x - p2[1].x) -
+                       (p1[0].x - p1[1].x)*(p2[0].x*p2[1].y - p2[0].y*p2[1].x)) / denom,
+                      ((p1[0].x*p1[1].y - p1[0].y*p1[1].x)*(p2[0].y - p2[1].y) -
+                       (p1[0].y - p1[1].y)*(p2[0].x*p2[1].y - p2[0].y*p2[1].x)) / denom);
+
+    return intersect;
+}
+
+vector<Point2f> lineToPointPair(Vec2f line)
+{
+    vector<Point2f> points;
+
+    float r = line[0], t = line[1];
+    double cos_t = cos(t), sin_t = sin(t);
+    double x0 = r*cos_t, y0 = r*sin_t;
+    double alpha = 1000;
+
+    points.push_back(Point2f(x0 + alpha*(-sin_t), y0 + alpha*cos_t));
+    points.push_back(Point2f(x0 - alpha*(-sin_t), y0 - alpha*cos_t));
+
+    return points;
 }
 
 int main(int argc, char **argv)
