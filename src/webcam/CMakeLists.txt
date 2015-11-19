@@ -6,7 +6,10 @@ project(webcam)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  std_msgs
+  cv_bridge
 )
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -111,9 +114,11 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_LIBRARIES})
+
+add_executable(listener src/listener.cpp src/squarefinder.cpp src/squarefinder.h)
+target_link_libraries(listener ${catkin_LIBRARIES})
+target_link_libraries(listener ${OpenCV_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(webcam
