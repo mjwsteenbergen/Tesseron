@@ -14,76 +14,59 @@ bool acceptLinePair(Vec2f line1, Vec2f line2, float minTheta);
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
-void chatterCallback()
+void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
+    double re = drand48();
+    if(rand() % 100 > 15){
+        return;
+    }
     //const sensor_msgs::Image::ConstPtr& msg
     //ROS_INFO("I heard: [%d]", msg->data);
-    //cv::Mat occludedSquare = cv_bridge::toCvCopy(msg)->image;
-    cv::Mat occludedSquare = cv::imread("/home/newnottakenname/Coding/Tesseron/src/webcam/src/LilStone.jpg", cv::IMREAD_ANYCOLOR);
+    //
+    cv::Mat webcam_image= cv_bridge::toCvCopy(msg)->image;
+    //cv::Mat webcam_image = cv::imread("/home/newnottakenname/Coding/Tesseron/src/webcam/src/LilStone.jpg", cv::IMREAD_ANYCOLOR);
 
-    if(occludedSquare.empty())
+    if(webcam_image.empty())
     {
         return;
     }
-
-    resize(occludedSquare, occludedSquare, Size(0, 0), 1, 1);
-
-    Mat occludedSquare8u;
-    cvtColor(occludedSquare, occludedSquare8u, CV_BGRA2GRAY);
-
-
-
-    Mat thresh;
-    threshold(occludedSquare8u, thresh, 200.0, 255.0, THRESH_BINARY);
-
-    GaussianBlur(thresh, thresh, Size(7, 7), 2.0, 2.0);
-
-    Mat edges;
-    Canny(thresh, edges, 66.0, 133.0, 3);
-
-    vector<Vec2f> lines;
-    HoughLines( edges, lines, 1, CV_PI/180, 50, 0, 0 );
-
-    cout << "Detected " << lines.size() << " lines." << endl;
-
-    // compute the intersection from the lines detected...
-    vector<Point2f> intersections;
-    for( size_t i = 0; i < lines.size(); i++ )
-    {
-        for(size_t j = 0; j < lines.size(); j++)
-        {
-            Vec2f line1 = lines[i];
-            Vec2f line2 = lines[j];
-            if(acceptLinePair(line1, line2, CV_PI / 32))
-            {
-                Point2f intersection = computeIntersect(line1, line2);
-                intersections.push_back(intersection);
-            }
-        }
-
-    }
-
-    if(intersections.size() > 0)
-    {
-        vector<Point2f>::iterator i;
-        for(i = intersections.begin(); i != intersections.end(); ++i)
-        {
-            //cout << "Intersection is " << i->x << ", " << i->y << endl;
-            circle(occludedSquare, *i, 1, Scalar(0, 255, 0), 3);
-        }
-    }
+    resize(webcam_image, webcam_image, Size(0, 0), 1, 1);
 
     vector<vector<Point> > squares;
 
+    //Convert BGR to HSV
+    Mat HSVmat;
+    cvtColor(webcam_image, HSVmat, COLOR_BGR2HSV);
+
+    //Threshold the HSV image to get only blue colors
+    Mat greyMask;
+    inRange(HSVmat, Scalar(12,25,30), Scalar(29,120,170), greyMask);
+    Mat whiteMask;
+    inRange(HSVmat, Scalar(0, 0, 220), Scalar(63, 50, 360), whiteMask);
+    Mat blueMask;
+    inRange(HSVmat, Scalar(5, 110, 111), Scalar(27, 256, 255), blueMask);
+    Mat blackMask;
+    inRange(HSVmat, Scalar(0, 0, 0), Scalar(256, 256, 100), blackMask);
+
     squarefinder finder;
-    finder.findSquares(occludedSquare, squares);
-    finder.drawSquares(occludedSquare, squares);
+    finder.findSquares(blueMask, squares);
+    finder.findSquares(blackMask, squares);
+    finder.findSquares(whiteMask, squares);
+    finder.findSquares(greyMask, squares);
+//    finder.findSquares(invertedPicture, squares);
+//    finder.drawSquares(webcam_image, squares);
+//    imshow("Windows", greyMask);
+    //waitKey(0);
 
 
+//    imshow("Grey", greyRes);
+//    imshow("Blue", blueRes);
+//    imshow("White", whiteRes);
+//    imshow("Black", blackRes);
+//    imshow("Original", webcam_image);
 
-
-    imshow("intersect", occludedSquare);
-    waitKey(300);
+    //imshow("intersect", occludedSquare);
+    //waitKey(0);
 
     return;
 }
@@ -171,8 +154,8 @@ int main(int argc, char **argv)
    * is the number of messages that will be buffered up before beginning to throw
    * away the oldest ones.
    */
-  //ros::Subscriber sub = n.subscribe("/usb_cam/image_raw", 1000, chatterCallback);
-    chatterCallback();
+  ros::Subscriber sub = n.subscribe("/usb_cam/image_raw", 1000, chatterCallback);
+    //chatterCallback();
 
   /**
    * ros::spin() will enter a loop, pumping callbacks.  With this version, all

@@ -34,7 +34,7 @@ static void help() {
 }
 
 
-int thresh = 50, N = 11;
+int thresh = 50, N = 20;//N = 11;
 const char *wndname = "Square Detection Demo";
 
 // helper function:
@@ -51,7 +51,7 @@ static double angle(Point pt1, Point pt2, Point pt0) {
 // returns sequence of squares detected on the image.
 // the sequence is stored in the specified memory storage
 void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares) {
-    squares.clear();
+    //squares.clear();
 
     Mat pyr, timg, gray0(image.size(), CV_8U), gray;
 
@@ -61,9 +61,10 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
     vector<vector<Point> > contours;
 
     // find squares in every color plane of the image
-    for (int c = 0; c < 3; c++) {
-        int ch[] = {c, 0};
-        mixChannels(&timg, 1, &gray0, 1, ch, 1);
+    //for (int c = 0; c < 3; c++) {
+        //int ch[] = {c, 0};
+        //mixChannels(&timg, 1, &gray0, 1, ch, 1);
+        gray0 = timg;
 
         // try several threshold levels
         for (int l = 0; l < N; l++) {
@@ -72,7 +73,7 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
             if (l == 0) {
                 // apply Canny. Take the upper threshold from slider
                 // and set the lower to 0 (which forces edges merging)
-                Canny(gray0, gray, 0, thresh, 5);
+                Canny(image, gray, 0, thresh, 5);
                 // dilate canny output to remove potential
                 // holes between edge segments
                 dilate(gray, gray, Mat(), Point(-1, -1));
@@ -82,6 +83,9 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
                 //     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
                 gray = gray0 >= (l + 1) * 255 / N;
             }
+
+            imshow("MyGrey",gray);
+            //waitKey(0);
 
             // find contours and store them all as a list
             findContours(gray, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
@@ -101,7 +105,7 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
                 // area may be positive or negative - in accordance with the
                 // contour orientation
                 if (approx.size() == 4 &&
-                    fabs(contourArea(Mat(approx))) > 1000 &&
+                    fabs(contourArea(Mat(approx))) > 500 &&
                     isContourConvex(Mat(approx))) {
                     double maxCosine = 0;
 
@@ -119,7 +123,7 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
                 }
             }
         }
-    }
+    //}
 }
 
 
@@ -132,4 +136,5 @@ void squarefinder::drawSquares(Mat &image, const vector<vector<Point> > &squares
     }
 
     imshow("MyWindow", image);
+    waitKey(30);
 }
