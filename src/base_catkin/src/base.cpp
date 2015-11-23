@@ -9,9 +9,9 @@
  *  
  */
 
-//#include <XMLConfiguration.h>
+#include <threemxl/platform/io/configuration/XMLConfiguration.h>
 #include <threemxl/dxlassert.h>
-//#include <base/base.h>
+#include <base_catkin/base.h>
 
 #define CLIP(x, l, u) ((x)<(l))?(l):((x)>(u))?(u):(x)
 
@@ -106,7 +106,7 @@ void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
  * Publish the status of the base motors
  */
 void Base::publishStatus() {
-	base::BaseStatus msg;
+	base_catkin::BaseStatus msg;
 	
 	//	more stuff here
 

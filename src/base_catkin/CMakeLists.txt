@@ -60,7 +60,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${threeMXL_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(base_catkin
@@ -78,6 +78,10 @@ add_executable(base src/base.cpp)
 target_link_libraries(base
    ${catkin_LIBRARIES}
 )
+target_link_libraries(base
+        ${thsreeMXL_LIBRARIES}
+    )
+
 
 #############
 ## Install ##

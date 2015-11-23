@@ -15,7 +15,7 @@
 #include <ros/ros.h>
 #include <threemxl/C3mxlROS.h>
 #include <geometry_msgs/Twist.h>
-#include <base/BaseStatus.h>
+#include <base_catkin/BaseStatus.h>
 
 /// Basic base controller class
 /**
