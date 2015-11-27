@@ -12,10 +12,8 @@
 #include <threemxl/platform/io/configuration/XMLConfiguration.h>
 #include <threemxl/dxlassert.h>
 #include <base_catkin/base.h>
-#include <sensor_msgs/Joy.h>
 
 #define CLIP(x, l, u) ((x)<(l))?(l):((x)>(u))?(u):(x)
-
 
 void Base::init() {
 	ROS_INFO("Initializing base");
@@ -32,7 +30,7 @@ void Base::init() {
 
 	// Subscriptions to command topic
 	// code here!
-		ros::Subscriber sub = nh_.subscribe("joy", 50, velocityCallback);
+
 	// Publish status
 	// code here!
 
@@ -76,7 +74,6 @@ void Base::init() {
 	left_motor_->set3MxlMode(SPEED_MODE);
 }
 
-
 void Base::spin() {
 	double curpos;
 	curpos = left_motor_->getPos();
@@ -90,30 +87,38 @@ void Base::spin() {
 		ROS_INFO("Position %f",curpos);
 		ros::spinOnce();
 		publishStatus();
+		
 		r.sleep();
 	}
 }
 
 void Base::drive() {
 	ROS_INFO("Driving");
+	left_motor_->setLinearSpeed(1.0); 
 }
 
 /**
  * Callback that handles velocities
  */
+void Base::velocityCallback(const sensor_msgs::Twist::ConstPtr &msg) {
+	// Base is nonholonomic, warn if sent a command we can't execute
+	if (msg->linear.y || msg->linear.z || msg->angular.x || msg->angular.y) {
+		ROS_WARN("I'm afraid I can't do that, Dave.");
+		return;
+	}
 
-void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
-
+	if(mode_pos_) {
 		left_motor_->set3MxlMode(SPEED_MODE);
 		left_motor_->get3MxlMode();
-		left_motor_->setLinearSpeed(1); 
+
 		right_motor_->set3MxlMode(SPEED_MODE);
 		right_motor_->get3MxlMode();
-		right_motor_->setLinearSpeed(1); 
 
+		mode_pos_ = false;
+	}
+
+	//	more stuff here
 }
-
-
 
 /**
  * Publish the status of the base motors

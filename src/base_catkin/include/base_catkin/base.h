@@ -72,6 +72,7 @@ class Base {
 	 * Await and process commands
 	 */
 	void spin();
+	void drive();
 };
 
 
