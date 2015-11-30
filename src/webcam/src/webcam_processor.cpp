@@ -3,6 +3,7 @@
 #include "opencv2/opencv.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "squarefinder.h"
+#include "Square.h"
 
 using namespace cv;
 using namespace std;
@@ -10,6 +11,8 @@ using namespace std;
 Point2f computeIntersect(Vec2f line1, Vec2f line2);
 vector<Point2f> lineToPointPair(Vec2f line);
 bool acceptLinePair(Vec2f line1, Vec2f line2, float minTheta);
+
+void getPositionOfSquares(Square pSquare[50], std::vector<std::vector<Point> > &vector);
 
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
@@ -54,7 +57,7 @@ void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
     finder.findSquares(whiteMask, squares);
     finder.findSquares(greyMask, squares);
 //    finder.findSquares(invertedPicture, squares);
-//    finder.drawSquares(webcam_image, squares);
+
 //    imshow("Windows", greyMask);
     //waitKey(0);
 
@@ -68,7 +71,91 @@ void chatterCallback(const sensor_msgs::Image::ConstPtr& msg)
     //imshow("intersect", occludedSquare);
     //waitKey(0);
 
+    Square positions [50];
+    getPositionOfSquares(positions, squares);
+
+    finder.drawSquares(webcam_image, squares);
+
     return;
+}
+
+void getPositionOfSquares(Square pSquare[50], std::vector<std::vector<Point> > &vector) {
+
+    double total_width = 0.0;
+    double total_height = 0.0;
+    int number = 0;
+
+//    std::vector<Point> points;
+
+//    for(int i = 0; i < vector.size(); i++)
+//    {
+//        std::vector<Point> vic = vector[i];
+//        if(vic.size() == 0.0){
+//            break;
+//        }
+//        Point ld = vic[0];
+//        Point lu = vic[1];
+//        Point ru = vic[1];
+//        Point rd = vic[1];
+//
+//        number++;
+//
+//        total_height += ((lu.y - ld.y) + (ru.y - rd.y))/2;
+//        total_width += ((ru.x - lu.x) + (rd.x - ld.x))/2;
+//
+//        points.push_back(ld);
+//
+//    }
+
+    std::vector<std::vector<Point> > singleSquare;
+
+    for(int i = 0; i < vector.size(); i++)
+    {
+        std::vector<Point> vic = vector[i];
+        bool breaked = false;
+        for(int j = 0; j < singleSquare.size(); j++){
+            std::vector<Point> vic2 = singleSquare[j];
+            for(int k = 0; k < 4; k++){
+                if(abs(vic[k].x - vic2[k].x) < 30 && abs(vic[k].y - vic2[k].y) < 30 ){
+                    int x = abs(vic[k].x - vic2[k].x);
+                    int y = abs(vic[k].y - vic2[k].y);
+                    breaked = true;
+                }
+            }
+            if(breaked){
+                break;
+            }
+        }
+        if(breaked)
+        {
+            continue;
+        }
+        Point ld = vic[0];
+        Point lu = vic[1];
+        Point ru = vic[2];
+        Point rd = vic[3];
+
+        double west =  sqrt(pow(lu.y - ld.y,2) + pow(lu.x - ld.x,2));
+        double east =  sqrt(pow(ru.y - rd.y,2) + pow(ru.x - rd.x,2));
+        double north = sqrt(pow(lu.y - ru.y,2) + pow(lu.x - ru.x,2));
+        double south = sqrt(pow(ld.y - rd.y,2) + pow(ld.x - rd.x,2));
+
+        double average = (west+ east + north+ south)/4;
+
+        double temp = abs(east - west + north - south);
+        if(temp > 20)
+        {
+            continue;
+        }
+
+        singleSquare.push_back(vic);
+
+    }
+
+    vector = singleSquare;
+    //bool pause = true;
+
+
 }
 
 bool acceptLinePair(Vec2f line1, Vec2f line2, float minTheta)

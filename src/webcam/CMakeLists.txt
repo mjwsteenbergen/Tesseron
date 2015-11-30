@@ -116,7 +116,7 @@ catkin_package(
 # include_directories(include)
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_LIBRARIES})
 
-add_executable(webcam src/webcam_processor.cpp src/squarefinder.cpp src/squarefinder.h)
+add_executable(webcam src/webcam_processor.cpp src/squarefinder.cpp src/squarefinder.h src/Square.cpp src/Square.h)
 target_link_libraries(webcam ${catkin_LIBRARIES})
 target_link_libraries(webcam ${OpenCV_LIBRARIES})
 
