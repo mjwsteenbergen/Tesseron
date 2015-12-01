@@ -31,7 +31,7 @@ void Base::init() {
 
 	// Subscriptions to command topic
 	// code here!
-		ros::Subscriber sub = nh_.subscribe("/joy", 50, &Base::velocityCallback, this);
+	ros::Subscriber sub = nh_.subscribe<geometry_msgs::Twist>("basecontrol", 50, &Base::velocityCallback, this);
 	// Publish status
 	// code here!
 
@@ -44,7 +44,7 @@ void Base::init() {
 	left_motor_ = new C3mxlROS(motor_port_name.c_str());
 	left_motor_->setConfig(&motor_config_left);
 
-	ROS_INFO("Initializing base10");
+	//ROS_INFO("Initializing base10");
 
 	// Initialize left motor
 	ros::Rate init_rate(1);
@@ -52,13 +52,13 @@ void Base::init() {
 		ROS_WARN_ONCE("Couldn't initialize left wheel motor, will continue trying every second");
 		init_rate.sleep();
 	}
-	ROS_INFO("Initializing base11");
+	//ROS_INFO("Initializing base11");
 	CDxlConfig motor_config_right;
 	motor_config_right.readConfig(motor_config_xml.root().section("right"));
 	right_motor_ = new C3mxlROS(motor_port_name.c_str());
 	right_motor_->setConfig(&motor_config_right);
 
-	ROS_INFO("Initializing base2");
+	//ROS_INFO("Initializing base2");
 
 	// Initialize right motor
 	while (ros::ok() && right_motor_->init() != DXL_SUCCESS) {
@@ -72,7 +72,7 @@ void Base::init() {
 	mode_pos_ = false;
 
 	ROS_INFO("Base initialized");
-	left_motor_->set3MxlMode(SPEED_MODE);
+	//left_motor_->set3MxlMode(SPEED_MODE);
 }
 
 
@@ -88,7 +88,7 @@ void Base::spin() {
 		curpos = left_motor_->presentPos();
 		ROS_INFO("Position %f",curpos);
 		ros::spinOnce();
-		publishStatus();
+		//publishStatus();
 		r.sleep();
 	}
 }
@@ -103,12 +103,13 @@ void Base::drive() {
 
 void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
 
+		ROS_INFO("Message recieved");		
 		left_motor_->set3MxlMode(SPEED_MODE);
 		left_motor_->get3MxlMode();
-		left_motor_->setLinearSpeed(1); 
+		left_motor_->setLinearSpeed(msg->linear.y + msg->angular.z); 
 		right_motor_->set3MxlMode(SPEED_MODE);
 		right_motor_->get3MxlMode();
-		right_motor_->setLinearSpeed(1); 
+		right_motor_->setLinearSpeed(msg->linear.y - msg->angular.z); 
 
 }
 
