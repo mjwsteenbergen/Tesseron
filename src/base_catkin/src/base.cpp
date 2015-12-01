@@ -8,7 +8,6 @@
  * 1.0		Initial version
  *  
  */
-
 #include <threemxl/platform/io/configuration/XMLConfiguration.h>
 #include <threemxl/dxlassert.h>
 #include <base_catkin/base.h>
@@ -32,7 +31,7 @@ void Base::init() {
 
 	// Subscriptions to command topic
 	// code here!
-		ros::Subscriber sub = nh_.subscribe("joy", 50, velocityCallback);
+		ros::Subscriber sub = nh_.subscribe("/joy", 50, &Base::velocityCallback, this);
 	// Publish status
 	// code here!
 
