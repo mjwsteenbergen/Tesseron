@@ -15,6 +15,7 @@
 
 #define CLIP(x, l, u) ((x)<(l))?(l):((x)>(u))?(u):(x)
 
+ros::Publisher ztatuz_pub_;
 
 void Base::init() {
 	ROS_INFO("Initializing base");
@@ -31,7 +32,10 @@ void Base::init() {
 
 	// Subscriptions to command topic
 	// code here!
-	ros::Subscriber sub = nh_.subscribe<geometry_msgs::Twist>("basecontrol", 50, &Base::velocityCallback, this);
+	vel_sub_ = nh_.subscribe("/basecontrol", 50, &Base::velocityCallback, this);
+	ztatuz_pub_ = nh_.advertise<base_catkin::BaseStatus>("/base/status", 1000);
+//	 = nh_.subscribe("/test",1,&Base::testcb,this);
+
 	// Publish status
 	// code here!
 
@@ -69,12 +73,21 @@ void Base::init() {
 	DXL_SAFE_CALL(left_motor_->set3MxlMode(motor_config_left.m3mxlMode));
 	DXL_SAFE_CALL(right_motor_->set3MxlMode(motor_config_right.m3mxlMode));
 
+
+	right_motor_->set3MxlMode(SPEED_MODE);
+	left_motor_->set3MxlMode(SPEED_MODE);
+
 	mode_pos_ = false;
 
 	ROS_INFO("Base initialized");
 	//left_motor_->set3MxlMode(SPEED_MODE);
 }
 
+
+void Base::testcb(const std_msgs::Empty::ConstPtr &msg)
+{
+	ROS_INFO("here");
+}
 
 void Base::spin() {
 	double curpos;
@@ -86,7 +99,7 @@ void Base::spin() {
 	while(ros::ok()) {
 		left_motor_->getState();
 		curpos = left_motor_->presentPos();
-		ROS_INFO("Position %f",curpos);
+		//ROS_INFO("Position %f",curpos);
 		ros::spinOnce();
 		//publishStatus();
 		r.sleep();
@@ -103,13 +116,10 @@ void Base::drive() {
 
 void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
 
-		ROS_INFO("Message recieved");		
-		left_motor_->set3MxlMode(SPEED_MODE);
-		left_motor_->get3MxlMode();
-		left_motor_->setLinearSpeed(msg->linear.y + msg->angular.z); 
-		right_motor_->set3MxlMode(SPEED_MODE);
-		right_motor_->get3MxlMode();
-		right_motor_->setLinearSpeed(msg->linear.y - msg->angular.z); 
+		ROS_INFO("Message recieved %f", msg->linear.x);
+	left_motor_->setSpeed(msg->linear.x);
+//		left_motor_->setLinearSpeed(msg->linear.y + msg->angular.z);
+//		right_motor_->setLinearSpeed(msg->linear.y - msg->angular.z);
 
 }
 
@@ -120,8 +130,7 @@ void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
  */
 void Base::publishStatus() {
 	base_catkin::BaseStatus msg;
-	ros::Publisher ztatuz_pub_ = nh_.advertise<base_catkin::BaseStatus>("/motor_comm/sendto", 1000);
-	
+
 	//	more stuff here
 	base_catkin::MotorStatus ll;
 	base_catkin::MotorStatus rr;

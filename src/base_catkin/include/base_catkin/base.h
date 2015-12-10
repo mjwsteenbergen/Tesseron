@@ -16,6 +16,7 @@
 #include <threemxl/C3mxlROS.h>
 #include <geometry_msgs/Twist.h>
 #include <base_catkin/BaseStatus.h>
+#include <std_msgs/Empty.h>
 
 /// Basic base controller class
 /**
@@ -44,6 +45,7 @@ class Base {
 	 * Callback that handles velocities
 	 */
 	void velocityCallback(const geometry_msgs::Twist::ConstPtr &msg);
+	void testcb(const std_msgs::Empty::ConstPtr &msg);
 
 	/**
 	 * Publish the status of the base motors
