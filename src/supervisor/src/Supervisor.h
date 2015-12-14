@@ -10,12 +10,17 @@
 
 class Supervisor {
 protected:
+
     ros::NodeHandle nh_;
-    ros::Subscriber subs;
     const static int numberOfNodes = 2;
     int numberOfBootedNodes;
+    ros::Subscriber s_;
 
 public:
+    Supervisor() : nh_("~")
+    {
+        init();
+    }
     void init();
 
     void nodeInitialised(const supervisor::StatusMessage::ConstPtr &message);
