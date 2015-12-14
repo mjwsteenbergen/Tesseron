@@ -4,7 +4,7 @@
 
 #include "squarefinder.h"
 
-// The "Square Detector" program.
+// The "Tile Detector" program.
 // It loads several images sequentially and tries to find squares in
 // each image
 
@@ -18,8 +18,6 @@
 
 using namespace cv;
 using namespace std;
-
-
 
 static void help() {
     cout <<
@@ -35,7 +33,7 @@ static void help() {
 
 
 int thresh = 50, N = 20;//N = 11;
-const char *wndname = "Square Detection Demo";
+const char *wndname = "Tile Detection Demo";
 
 // helper function:
 // finds a cosine of angle between vectors
@@ -50,7 +48,7 @@ static double angle(Point pt1, Point pt2, Point pt0) {
 
 // returns sequence of squares detected on the image.
 // the sequence is stored in the specified memory storage
-void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares) {
+void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares, const TileColor tileColor) {
     //squares.clear();
 
     Mat pyr, timg, gray0(image.size(), CV_8U), gray;
@@ -119,7 +117,11 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
                     // (all angles are ~90 degree) then write quandrange
                     // vertices to resultant sequence
                     if (maxCosine < 0.3)
+                    {
+                        Tile tile;
+                        tile.init(tileColor, approx);
                         squares.push_back(approx);
+                    }
                 }
             }
         }
