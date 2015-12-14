@@ -3,7 +3,6 @@
 //
 
 #include "Supervisor.h"
-#include "std_msgs/Bool.h"
 
 int main(int argc, char **argv)
 {
@@ -13,9 +12,25 @@ int main(int argc, char **argv)
 }
 
 void Supervisor::init() {
-    nh_.subscribe("/basecontrol", 50, &Supervisor::nodeInitialised, this);
+    nh_.subscribe("/Tesseron/init", 50, &Supervisor::nodeInitialised, this);
+    numberOfBootedNodes = 0;
+    ROS_INFO("Looking for nodes..");
+    while(numberOfBootedNodes != numberOfNodes)
+    {
+        ros::spinOnce();
+    }
+    ROS_INFO("All Nodes Have Correctly Booted");
 }
 
-void Supervisor::nodeInitialised(StatusMessage_ message) {
-
+void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &message) {
+    if(message.get()->completed == false)
+    {
+        ROS_ERROR("A node could not boot correctly. We will not continue %s", message.get()->error.c_str());
+        ros::shutdown();
+    }
+    else
+    {
+        numberOfBootedNodes++;
+        ROS_INFO("Node %i booted", numberOfBootedNodes);
+    }
 }
