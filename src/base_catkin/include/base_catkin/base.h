@@ -17,6 +17,7 @@
 #include <geometry_msgs/Twist.h>
 #include <base_catkin/BaseStatus.h>
 #include <std_msgs/Empty.h>
+#include <base_catkin/Wheel.h>
 
 /// Basic base controller class
 /**
@@ -74,7 +75,9 @@ class Base {
 	 * Await and process commands
 	 */
 	void spin();
-	void drive();
+	void drive(base_catkin::Wheel::Request request, base_catkin::Wheel::Response response);
+	std::string drive(float distance);
+	void initService();
 };
 
 

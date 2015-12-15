@@ -12,6 +12,7 @@
 #include <threemxl/dxlassert.h>
 #include <base_catkin/base.h>
 #include <sensor_msgs/Joy.h>
+#include "base_catkin/Wheel.h"
 
 #define CLIP(x, l, u) ((x)<(l))?(l):((x)>(u))?(u):(x)
 
@@ -81,6 +82,31 @@ void Base::init() {
 
 	ROS_INFO("Base initialized");
 	//left_motor_->set3MxlMode(SPEED_MODE);
+
+	initService();
+}
+
+void Base::initService() {
+    //ros::ServiceServer service = nh_.advertiseService("add_two_ints", drive);
+}
+
+void Base::drive(base_catkin::Wheel::Request request, base_catkin::Wheel::Response response){
+	std::string error = drive(request.distance);
+	if(error != "")
+	{
+		response.succeeded =false;
+		response.error = error;
+	}
+	else
+	{
+		response.succeeded = true;
+		response.error = "";
+	}
+}
+
+std::string Base::drive(float distance)
+{
+	return "Not Implemented";
 }
 
 
@@ -95,7 +121,7 @@ void Base::spin() {
 	ROS_INFO("Spinning %f",curpos);
 
 	ros::Rate r(100);
-	drive();
+	//drive();
 	while(ros::ok()) {
 		left_motor_->getState();
 		curpos = left_motor_->presentPos();
@@ -104,10 +130,6 @@ void Base::spin() {
 		//publishStatus();
 		r.sleep();
 	}
-}
-
-void Base::drive() {
-	ROS_INFO("Driving");
 }
 
 /**
