@@ -12,6 +12,7 @@ add_message_files(
         FILES
         StatusMessage.msg
 )
+add_service_files(FILES Gripper.srv Wheel.srv LayDown.srv PickUp.srv)
 
 generate_messages(
         DEPENDENCIES

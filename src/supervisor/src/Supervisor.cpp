@@ -3,11 +3,18 @@
 //
 
 #include "Supervisor.h"
+#include "supervisor/Gripper.h"
+#include "supervisor/Wheel.h"
+#include "supervisor/LayDown.h"
+#include "supervisor/PickUp.h"
+
+
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "supervisor");
     Supervisor sups;
+    sups.layFloor();
 }
 
 void Supervisor::init() {
@@ -23,6 +30,13 @@ void Supervisor::init() {
     }
 
     ROS_INFO("All Nodes Have Correctly Booted");
+
+    //Create Clients (Services)
+
+    ros::NodeHandle n;
+    gripperService = n.serviceClient<supervisor::Gripper>("Gripper");
+    wheelService = n.serviceClient<supervisor::Wheel>("Wheel");
+    layDownService = n.serviceClient<supervisor::LayDown>("LayDown");
 }
 
 void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &message) {
@@ -35,4 +49,115 @@ void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &mess
         numberOfBootedNodes++;
         ROS_INFO("Node %i booted", numberOfBootedNodes);
     }
+}
+
+void Supervisor::layFloor() {
+    for(int i = 0; i < 16; i++)
+    {
+        layRow();
+        //TODO add webcam
+        moveBack(3);
+    }
+}
+
+void Supervisor::layRow() {
+    for(int i = 0; i < 16; i++)
+    {
+        getTile(Black);
+        moveTo(3,3);
+        dropTile(true);
+    }
+//    ros::
+
+}
+
+void Supervisor::moveBack(int distance) {
+
+    supervisor::Wheel srv;
+    srv.request.distance = distance;
+    if (wheelService.call(srv))
+    {
+        if(!srv.response.succeeded)
+        {
+            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error.c_str());
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service wheelService");
+    }
+
+}
+
+void Supervisor::moveTo(int x, int y) {
+    supervisor::Gripper srv;
+    srv.request.x = x;
+    srv.request.y = y;
+    if (gripperService.call(srv))
+    {
+        if(!srv.response.succeeded)
+        {
+            ROS_ERROR("There was an error, while calling gripperService: %s", srv.response.error.c_str());
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service wheelService");
+    }
+}
+
+void Supervisor::dropTile(bool b) {
+    supervisor::LayDown srv;
+    if (layDownService.call(srv))
+    {
+        if(!srv.response.succeeded)
+        {
+            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error.c_str());
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service wheelService");
+    }
+}
+
+void Supervisor::getTile(TileColor color) {
+
+    int defaultx = 0;
+    int defaulty = 0;
+    switch (color)
+    {
+        case Blue:
+            moveTo(defaultx, defaulty); // Move to pickup point //TODO
+            break;
+        default:
+            ROS_ERROR("There is no color like this. Please check color spectrum");
+            break;
+    }
+
+    pickupTile(false);
+
+    readyNextTile(color);
+
+}
+
+void Supervisor::pickupTile(bool fully) {
+    supervisor::PickUp srv;
+    srv.request.fully = fully;
+    if (layDownService.call(srv))
+    {
+        if(!srv.response.succeeded)
+        {
+            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error);
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service wheelService");
+    }
+}
+
+void Supervisor::readyNextTile(TileColor color) {
+    //TODO maybe add service?
+
 }
