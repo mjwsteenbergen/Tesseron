@@ -19,7 +19,7 @@ generate_messages(
         std_msgs  # Or other packages containing msgs
 )
 
-add_executable(supervisor src/Supervisor.cpp)
+add_executable(supervisor src/Supervisor.cpp src/ImageReader.cpp src/Tile.cpp)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -128,7 +128,7 @@ target_link_libraries(supervisor ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(supervisor
-#   src/${PROJECT_NAME}/supervisor.cpp
+#   src/${PROJECT_NAME}/ImageReader.h
 # )
 
 ## Add cmake target dependencies of the library

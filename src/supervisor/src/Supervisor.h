@@ -7,8 +7,8 @@
 
 #include "ros/ros.h"
 #include "supervisor/StatusMessage.h"
-
-enum TileColor{ Blue = 0, Grey = 1, White = 2, Black = 3};
+#include "Tile.h"
+#include "ImageReader.h"
 
 class Supervisor {
 protected:
@@ -32,8 +32,6 @@ public:
 
     void layFloor();
 
-    void layRow();
-
     void moveTo(int x, int y);
 
     void moveBack(int distance);
@@ -45,6 +43,8 @@ public:
     void pickupTile(bool fully);
 
     void readyNextTile(TileColor color);
+
+    void getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]);
 };
 
 

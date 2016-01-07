@@ -8,13 +8,14 @@
 #include "supervisor/LayDown.h"
 #include "supervisor/PickUp.h"
 
-
+static const std::string filename = "/home/newnottakenname/Coding/Tesseron/image";
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "supervisor");
     Supervisor sups;
     sups.layFloor();
+
 }
 
 void Supervisor::init() {
@@ -39,6 +40,11 @@ void Supervisor::init() {
     layDownService = n.serviceClient<supervisor::LayDown>("LayDown");
 }
 
+void Supervisor::getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]){
+    ImageReader reader;
+    reader.GetImage(filename, image);
+}
+
 void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &message) {
     if(message.get()->completed == false)
     {
@@ -52,23 +58,21 @@ void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &mess
 }
 
 void Supervisor::layFloor() {
-    for(int i = 0; i < 16; i++)
+
+    TileColor image[MOSAIC_SIZE][MOSAIC_SIZE];
+    getInstructions(image);
+
+    for(int i = 0; i < MOSAIC_SIZE; i++)
     {
-        layRow();
         //TODO add webcam
+        for(int j = 0; j < MOSAIC_SIZE; j++)
+        {
+            getTile(image[i][j]);
+            moveTo(i,j);
+            dropTile(true);
+        }
         moveBack(3);
     }
-}
-
-void Supervisor::layRow() {
-    for(int i = 0; i < 16; i++)
-    {
-        getTile(Black);
-        moveTo(3,3);
-        dropTile(true);
-    }
-//    ros::
-
 }
 
 void Supervisor::moveBack(int distance) {
@@ -143,12 +147,12 @@ void Supervisor::getTile(TileColor color) {
 
 void Supervisor::pickupTile(bool fully) {
     supervisor::PickUp srv;
-    srv.request.fully = fully;
+    srv.request.fully = (unsigned char) fully;
     if (layDownService.call(srv))
     {
         if(!srv.response.succeeded)
         {
-            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error);
+//            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error);
         }
     }
     else
