@@ -8,6 +8,8 @@
 #include "gripper/MoveGripper.h"
 #include "gripper/StatusMessage.h"
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
+#include "dynamixel_controllers/StartController.h"
+#include "dynamixel_controllers/SetSpeed.h"
 
 void Gripper::sendErrorMessage(const std::string message_body, const std::string sender) {
     ROS_WARN(message_body.c_str(), "Gripper");
@@ -25,9 +27,15 @@ void Gripper::init()
     PickUpClient  = nh_.advertiseService("pickup" , &Gripper::handlePickUp, this );
     MoveClient    = nh_.advertiseService("move" ,   &Gripper::handleMove, this );
 
+
+    //Dynamixel Services
+    Tilt_Command = nh_.serviceClient<dynamixel_controllers::SetSpeed>("/tilt_controller/set_speed");
+
+
+    //StatusPublisher
     statusPublisher = nh_.advertise<gripper::StatusMessage>("Tesseron/init", 10);
 
-    initialiseSpindle();
+//    initialiseSpindle();
     initialiseGearBar();
 
     //resetArms();
@@ -62,8 +70,17 @@ void Gripper::initialiseSpindle() {
 }
 
 void Gripper::initialiseGearBar() {
+//    DYNAMIXEL_CONTROLLERS_MESSAGE_SETSPEED_H::dynamixel_controllers::StartController startController;
+
+    dynamixel_controllers::SetSpeedRequest req;
+    req.speed = 1.0;
+
+    dynamixel_controllers::SetSpeedResponse resp;
 
 
+    Tilt_Command.call(req, resp);
+
+    ROS_INFO("Dynamixel initialised");
 }
 
 bool Gripper::handleLayDown(gripper::LayDown::Request &req, gripper::LayDown::Response &res)
@@ -87,10 +104,12 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
     //TODO
 
 //    spindle->set3MxlMode(PWM_MODE);
-//    spindle->setPWM(0.1, true);
-
+//    spindle->setPWM(0.1, false);
     int state = spindle->getState();
-    spindle->setSpeed(5);
+    spindle->set3MxlMode(SPEED_MODE);
+//    spindle->setSpeed(8, false);
+//    spindle->set3MxlMode(POSITION_MODE);
+//    spindle->setPos(-250, false);
 
     res.succeeded = (unsigned char) false;
 
@@ -118,10 +137,23 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Gripper");
     Gripper grip;
-    gripper::MoveGripperRequest req;
-    gripper::MoveGripperResponse resp;
-    grip.handleMove(req, resp);
-    ros::spin();
+//    gripper::MoveGripperRequest req;
+//    gripper::MoveGripperResponse resp;
+//    grip.handleMove(req, resp);
+//    grip.loop();
+//    ros::spin();
+}
+
+void Gripper::loop()
+{
+    ros::Rate loop_rate(1);
+    while(ros::ok()){
+        ros::spinOnce();
+        spindle->getState();
+        loop_rate.sleep();
+    }
+
+    STOP();
 }
 
 bool Gripper::resetGearBar() {
@@ -162,4 +194,9 @@ bool Gripper::resetSpindle() {
         return false;
     }
     return true;
+}
+
+void Gripper::STOP() {
+    spindle->set3MxlMode(PWM_MODE);
+    spindle->setPWM(0, false);
 }

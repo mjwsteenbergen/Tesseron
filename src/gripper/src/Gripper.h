@@ -8,7 +8,6 @@
 #include <ros/ros.h>
 #include <threemxl/C3mxlROS.h>
 #include <threemxl/dxlassert.h>
-#include "gripper/Gripper.h"
 #include <gripper/LayDownRequest.h>
 #include <gripper/LayDownResponse.h>
 #include <gripper/PickUpRequest.h>
@@ -58,6 +57,12 @@ public:
 
     bool handleMove(gripper::MoveGripperRequest_<std::allocator<void> > &req,
                     gripper::MoveGripperResponse_<std::allocator<void> > &res);
+
+    void loop();
+
+    void STOP();
+
+    ros::ServiceClient Tilt_Command;
 };
 
 

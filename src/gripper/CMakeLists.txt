@@ -7,6 +7,7 @@ project(gripper)
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         message_generation
+        dynamixel_controllers
         threemxl)
 
 add_message_files(
