@@ -7,7 +7,7 @@
 
 #include "webcam_communicator.h"
 #include "ros/ros.h"
-#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "squarefinder.h"
@@ -17,7 +17,7 @@
 using namespace cv;
 using namespace std;
 
-ros::Publisher ros_pub;
+ros::Publisher webcam_pub;
 bool IsWorkingOnImage;
 
 

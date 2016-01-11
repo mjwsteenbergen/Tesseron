@@ -2,7 +2,7 @@
 // Created by newnottakenname on 30.11.15.
 //
 
-#include <opencv2/core/types.hpp>
+#include <opencv2/core/core.hpp>
 #include "Tile.h"
 
 

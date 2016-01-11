@@ -17,8 +17,8 @@ using namespace cv;
 using namespace std;
 
 
-void getPositionOfSquares(std::vector<Tile> pSquare, std::vector<std::vector<Point> > &vector);
-void ProcessImage(cv::Mat webcam_image, std::vector<Tile> tiles);
+void getPositionOfSquares(std::vector<Tile> &tiles, std::vector<std::vector<Point> > &vector);
+void ProcessImage(cv::Mat webcam_image, std::vector<Tile> &tiles);
 
 
 

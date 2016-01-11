@@ -1,7 +1,7 @@
 #include "webcam_processor.hpp"
 
 
-void ProcessImage(cv::Mat webcam_image, std::vector<Tile> tiles)
+void ProcessImage(cv::Mat webcam_image, std::vector<Tile> &tiles)
 {
     if (webcam_image.empty()) {
         return;
@@ -30,15 +30,19 @@ void ProcessImage(cv::Mat webcam_image, std::vector<Tile> tiles)
     finder.findSquares(whiteMask, squares, White);
     finder.findSquares(greyMask, squares, Grey);
 
-    std::vector<Tile> positions;
-    getPositionOfSquares(positions, squares);
+    finder.drawSquares(webcam_image, squares);
+    waitKey(30);
+
+    getPositionOfSquares(tiles, squares);
 
     ROS_INFO("Processed Image");
 
-    //finder.drawSquares(webcam_image, squares);
+    finder.drawSquares(webcam_image, squares);
+    waitKey(30);
+
 }
 
-void getPositionOfSquares(std::vector<Tile> pSquare, std::vector<std::vector<Point> > &vector) {
+void getPositionOfSquares(std::vector<Tile> &tiles, std::vector<std::vector<Point> > &vector) {
 
     std::vector<std::vector<Point> > singleSquare;
 
@@ -77,6 +81,20 @@ void getPositionOfSquares(std::vector<Tile> pSquare, std::vector<std::vector<Poi
         if (temp > 20) {
             continue;
         }
+
+        Tile tile;
+
+        float yl = (ld.y + lu.y)/2;
+        float yr = (rd.y + ru.y)/2;
+        float y = (yl + yr)/2;
+
+        float xr = (rd.x + ru.x)/2;
+        float xl = (ld.x + lu.x)/2;
+        float x = (xl + xr)/2;
+
+
+        tile.init(average, x, y, Grey);
+        tiles.push_back(tile);
 
         singleSquare.push_back(vic);
 

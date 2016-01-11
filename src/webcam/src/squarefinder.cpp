@@ -82,9 +82,6 @@ void squarefinder::findSquares(const Mat &image, vector<vector<Point> > &squares
                 gray = gray0 >= (l + 1) * 255 / N;
             }
 
-            imshow("MyGrey",gray);
-            //waitKey(0);
-
             // find contours and store them all as a list
             findContours(gray, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
 
