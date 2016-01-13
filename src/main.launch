@@ -1,0 +1,6 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<include file="$(find gripper)/launch/gripper.launch"/>
+
+</launch>

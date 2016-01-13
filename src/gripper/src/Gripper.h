@@ -63,6 +63,12 @@ public:
     void STOP();
 
     ros::ServiceClient Tilt_Command;
+
+    void handleMoveSpindle(gripper::MoveGripperRequest_<std::allocator<void>> &req,
+                           gripper::MoveGripperResponse_<std::allocator<void>> &res);
+
+    void handleMoveMX(gripper::MoveGripperRequest_<std::allocator<void>> &request_,
+                      gripper::MoveGripperResponse_<std::allocator<void>> &response_);
 };
 
 

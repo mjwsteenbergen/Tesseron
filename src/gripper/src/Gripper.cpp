@@ -10,6 +10,9 @@
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
 #include "dynamixel_controllers/StartController.h"
 #include "dynamixel_controllers/SetSpeed.h"
+#include <iostream>
+#include <string>
+#include <math.h>
 
 void Gripper::sendErrorMessage(const std::string message_body, const std::string sender) {
     ROS_WARN(message_body.c_str(), "Gripper");
@@ -35,8 +38,8 @@ void Gripper::init()
     //StatusPublisher
     statusPublisher = nh_.advertise<gripper::StatusMessage>("Tesseron/init", 10);
 
-//    initialiseSpindle();
-    initialiseGearBar();
+    initialiseSpindle();
+//    initialiseGearBar();
 
     //resetArms();
 }
@@ -50,20 +53,35 @@ void Gripper::initialiseSpindle() {
     std::string name = "motor_comm"; //FIXME
 
     spindle = new C3mxlROS(name.c_str());
+
+
+
+
 //    spindle->set3MxlMode(PWM_MODE);
 //    spindle->setGearboxRatioMotor(3.0);
     CDxlConfig spindleConfig;
     spindleConfig.readConfig(configuration.root().section("left"));
 
     spindle->setConfig(&spindleConfig);
-    spindle->set3MxlMode(SPEED_MODE);
-    spindle->getState();
+
+    double spoed = 5.988408933E-3;
+
+    spindle->setWheelDiameter(spoed/(M_PI*2));
+
+
+//    spindle->set3MxlMode(SPEED_MODE);
+//    spindle->getState();
 
     while (ros::ok() && spindle->init() != DXL_SUCCESS)
     {
         sendErrorMessage("Couldn't connect to spindle, will continue trying every second", "Spindle");
         init_rate.sleep();
     }
+
+//    DXL_SAFE_CALL(spindle->set3MxlMode(EXTERNAL_INIT));
+//    DXL_SAFE_CALL(spindle->setAcceleration(1));
+//    DXL_SAFE_CALL(spindle->setSpeed(-0.3));
+//    DXL_SAFE_CALL(spindle->setTorque(-0.1));
 
     sendErrorMessage("Yolo","swag");
 
@@ -101,21 +119,36 @@ bool Gripper::handlePickUp(gripper::PickUp::Request &req, gripper::PickUp::Respo
 
 bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGripper::Response &res)
 {
-    //TODO
+    res.succeeded = (unsigned char) true;
 
-//    spindle->set3MxlMode(PWM_MODE);
-//    spindle->setPWM(0.1, false);
-    int state = spindle->getState();
-    spindle->set3MxlMode(SPEED_MODE);
-//    spindle->setSpeed(8, false);
-//    spindle->set3MxlMode(POSITION_MODE);
-//    spindle->setPos(-250, false);
+//    handleMoveSpindle(req, res);
+    handleMoveMX(req,res);
 
-    res.succeeded = (unsigned char) false;
-
-    sendErrorMessage("no","no");
 
     return true;
+}
+
+void Gripper::handleMoveSpindle(gripper::MoveGripperRequest_<std::allocator<void> > &req,
+                         gripper::MoveGripperResponse_<std::allocator<void> > &res) {
+
+    int state = spindle->getState();
+
+    double startPosRad = spindle->presentPos();
+
+    spindle->set3MxlMode(POSITION_MODE);
+
+    double speed = (req.y / 0.004) * 2 * M_PI;
+
+    spindle->setPos(startPosRad + speed, false);
+
+    double endPosRad = spindle->presentPos();
+
+
+}
+
+void Gripper::handleMoveMX(gripper::MoveGripperRequest_<std::allocator<void>> &request_,
+                           gripper::MoveGripperResponse_<std::allocator<void>> &response_) {
+
 }
 
 
@@ -137,10 +170,10 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Gripper");
     Gripper grip;
-//    gripper::MoveGripperRequest req;
-//    gripper::MoveGripperResponse resp;
+    gripper::MoveGripperRequest req;
+    gripper::MoveGripperResponse resp;
 //    grip.handleMove(req, resp);
-//    grip.loop();
+    grip.loop();
 //    ros::spin();
 }
 
@@ -151,6 +184,17 @@ void Gripper::loop()
         ros::spinOnce();
         spindle->getState();
         loop_rate.sleep();
+
+        int i = __cplusplus;
+
+        double posd = spindle->presentPos();
+        int pos = spindle->getLinearPos();
+
+
+        std::string s= std::to_string(spindle->getPos());
+//        ROS_INFO();
+        int b = 3;
+
     }
 
     STOP();
