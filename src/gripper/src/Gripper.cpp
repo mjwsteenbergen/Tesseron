@@ -121,7 +121,7 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
 {
     res.succeeded = (unsigned char) true;
 
-//    handleMoveSpindle(req, res);
+    handleMoveSpindle(req, res);
     handleMoveMX(req,res);
 
 
@@ -171,8 +171,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Gripper");
     Gripper grip;
     gripper::MoveGripperRequest req;
+    req.y = -0.004;
     gripper::MoveGripperResponse resp;
-//    grip.handleMove(req, resp);
+    grip.handleMove(req, resp);
     grip.loop();
 //    ros::spin();
 }
