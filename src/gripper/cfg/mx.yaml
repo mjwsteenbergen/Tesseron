@@ -3,10 +3,10 @@ pan_controller:
         package: dynamixel_controllers
         module: joint_torque_controller
         type: JointTorqueController
-    joint_name: pan_joint
-    joint_speed: 1.17
+    joint_name: MX_Motor
+    joint_speed: 0
     motor:
-        id: 3
+        id: 1
         init: 0
         min: 0
         max: 4095

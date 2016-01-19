@@ -31,7 +31,7 @@ generate_messages(
         std_msgs  # Or other packages containing msgs
 )
 
-add_executable(gripper src/Gripper.cpp)
+add_executable(gripper src/Gripper.cpp src/DynamixelMotor.cpp)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

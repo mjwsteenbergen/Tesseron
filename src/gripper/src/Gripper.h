@@ -14,6 +14,9 @@
 #include <gripper/PickUpResponse.h>
 #include <gripper/MoveGripperRequest.h>
 #include <gripper/MoveGripperResponse.h>
+#include <geometry_msgs/Twist.h>
+#include "DynamixelMotor.h"
+
 
 class Gripper {
 
@@ -43,6 +46,10 @@ public:
         init();
     }
 
+
+    DynamixelMotor MX;
+    DynamixelMotor RX;
+
     void initialiseSpindle();
 
     void initialiseGearBar();
@@ -69,6 +76,11 @@ public:
 
     void handleMoveMX(gripper::MoveGripperRequest_<std::allocator<void>> &request_,
                       gripper::MoveGripperResponse_<std::allocator<void>> &response_);
+
+    void TwistCallback(const geometry_msgs::Twist::ConstPtr &msg);
+
+
+    void setSpeed(double speedMX, double speedSpindle, double speedRX);
 };
 
 

@@ -1,8 +1,8 @@
 tilt_controller:
     controller:
         package: dynamixel_controllers
-        module: joint_position_controller
-        type: JointPositionController
+        module: joint_torque_controller
+        type: JointTorqueController
     joint_name: tilt_joint
     joint_speed: 0
     motor:

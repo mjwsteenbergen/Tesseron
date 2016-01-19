@@ -10,9 +10,18 @@
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
 #include "dynamixel_controllers/StartController.h"
 #include "dynamixel_controllers/SetSpeed.h"
+#include "std_msgs/Float64.h"
+#include "DynamixelMotor.h"
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <thread>
+
+std_msgs::Float64 pubmesh;
+
+ros::Subscriber PS3_Sub;
+
+ros::Publisher RX_Pub;
 
 void Gripper::sendErrorMessage(const std::string message_body, const std::string sender) {
     ROS_WARN(message_body.c_str(), "Gripper");
@@ -30,16 +39,22 @@ void Gripper::init()
     PickUpClient  = nh_.advertiseService("pickup" , &Gripper::handlePickUp, this );
     MoveClient    = nh_.advertiseService("move" ,   &Gripper::handleMove, this );
 
-
-    //Dynamixel Services
+//    RX_Pub    = nh_.advertise<std_msgs::Float64>("/tilt_controller/command" , 1000);
+//    MX_Pub    = nh_.advertise<std_msgs::Float64>("/pan_controller/command" , 1000);
+    PS3_Sub   = nh_.subscribe("/basecontrol", 50, &Gripper::TwistCallback, this);
     Tilt_Command = nh_.serviceClient<dynamixel_controllers::SetSpeed>("/tilt_controller/set_speed");
 
 
     //StatusPublisher
     statusPublisher = nh_.advertise<gripper::StatusMessage>("Tesseron/init", 10);
 
-    initialiseSpindle();
-//    initialiseGearBar();
+
+
+
+
+
+//    initialiseSpindle();
+    initialiseGearBar();
 
     //resetArms();
 }
@@ -48,7 +63,7 @@ void Gripper::initialiseSpindle() {
     ros::Rate init_rate(1);
 
     CXMLConfiguration configuration;
-    ROS_ASSERT(configuration.loadFile("/home/newnottakenname/Coding/Tesseron/src/gripper/config/gripper.xml"));
+    ROS_ASSERT(configuration.loadFile("/home/newnottakenname/Coding/Tesseron/src/gripper/cfg/gripper.xml"));
 
     std::string name = "motor_comm"; //FIXME
 
@@ -83,20 +98,44 @@ void Gripper::initialiseSpindle() {
 //    DXL_SAFE_CALL(spindle->setSpeed(-0.3));
 //    DXL_SAFE_CALL(spindle->setTorque(-0.1));
 
-    sendErrorMessage("Yolo","swag");
+    ROS_INFO("Spindle initialised");
+
 
 }
 
 void Gripper::initialiseGearBar() {
 //    DYNAMIXEL_CONTROLLERS_MESSAGE_SETSPEED_H::dynamixel_controllers::StartController startController;
 
-    dynamixel_controllers::SetSpeedRequest req;
-    req.speed = 1.0;
+//    dynamixel_controllers::SetSpeedRequest req;
+//    req.speed = 1.0;
+//
+//    dynamixel_controllers::SetSpeedResponse resp;
+//
+//
+//    Tilt_Command.call(req, resp);
 
-    dynamixel_controllers::SetSpeedResponse resp;
 
 
-    Tilt_Command.call(req, resp);
+
+
+    //MX.setMotorName("/pan_controller/", 3E-02);
+    RX.setMultiplier(30);
+    RX.setMinus(2.62);
+    RX.setMotorName("/tilt_controller/", 16E-3);
+    RX.initCompleted();
+
+
+
+
+    //ros::Rate loop(1);
+
+    //loop.sleep();
+
+//    std_msgs::Float64 mes2;
+
+//    mes2.data = 0;
+
+//    MX_Pub.publish(mes2);
 
     ROS_INFO("Dynamixel initialised");
 }
@@ -122,7 +161,7 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
     res.succeeded = (unsigned char) true;
 
     handleMoveSpindle(req, res);
-    handleMoveMX(req,res);
+    MX.gotoPosition(req.x);
 
 
     return true;
@@ -139,15 +178,11 @@ void Gripper::handleMoveSpindle(gripper::MoveGripperRequest_<std::allocator<void
 
     double speed = (req.y / 0.004) * 2 * M_PI;
 
-    spindle->setPos(startPosRad + speed, false);
+    //
+    spindle->setPos(startPosRad + speed, 8*M_PI, 32*M_PI, false);
 
     double endPosRad = spindle->presentPos();
 
-
-}
-
-void Gripper::handleMoveMX(gripper::MoveGripperRequest_<std::allocator<void>> &request_,
-                           gripper::MoveGripperResponse_<std::allocator<void>> &response_) {
 
 }
 
@@ -166,39 +201,59 @@ void Gripper::resetArms() {
     sendErrorMessage("Not Implemented", "Gripper");
 }
 
-int main(int argc, char **argv)
+void Gripper::setSpeed(double speedMX, double speedSpindle, double speedRX)
 {
-    ros::init(argc, argv, "Gripper");
-    Gripper grip;
-    gripper::MoveGripperRequest req;
-    req.y = -0.004;
-    gripper::MoveGripperResponse resp;
-    grip.handleMove(req, resp);
-    grip.loop();
-//    ros::spin();
+    spindle->getState();
+    spindle->set3MxlMode(SPEED_MODE);
+    spindle->setSpeed(speedSpindle);
+
+    RX.setSpeed(speedMX);
+    MX.setSpeed(speedRX);
 }
 
 void Gripper::loop()
 {
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(1000);
     while(ros::ok()){
-        ros::spinOnce();
-        spindle->getState();
+//        spindle->getState();
+
+
+//        MX.loopOnce();
+        RX.loopOnce();
+
+        //double d = (2*M_PI + 0.4*M_PI);
+        //int i = (int) d;
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+//        ros::Rate waitTime(0.5);
+//        waitTime.sleep();
+//
         loop_rate.sleep();
+//
+//        mes.data = 0;
+//
+//        MX_Pub.publish(mes);
+//
+//        loop_rate.sleep();
+//        loop_rate.sleep();
+//        loop_rate.sleep();
 
-        int i = __cplusplus;
 
-        double posd = spindle->presentPos();
-        int pos = spindle->getLinearPos();
+//        int i = __cplusplus;
+
+        //double posd = spindle->presentPos();
+        //int pos = spindle->getLinearPos();
 
 
-        std::string s= std::to_string(spindle->getPos());
+        //std::string s= std::to_string(spindle->getPos());
 //        ROS_INFO();
-        int b = 3;
+
+        ros::spinOnce();
 
     }
 
-    STOP();
+    //STOP();
 }
 
 bool Gripper::resetGearBar() {
@@ -244,4 +299,23 @@ bool Gripper::resetSpindle() {
 void Gripper::STOP() {
     spindle->set3MxlMode(PWM_MODE);
     spindle->setPWM(0, false);
+}
+
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "Gripper");
+    Gripper grip;
+    grip.RX.gotoPosition(0.12);
+    grip.loop();
+//    gripper::MoveGripperRequest req;
+
+}
+
+void Gripper::TwistCallback(const geometry_msgs::Twist::ConstPtr &msg) {
+
+    setSpeed(msg->linear.x, msg->linear.y, msg->angular.z);
+
+
+
 }
