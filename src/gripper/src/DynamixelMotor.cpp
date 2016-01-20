@@ -8,14 +8,6 @@
 #include <dynamixel_msgs/JointState.h>
 #include <std_msgs/Float64.h>
 
-int rotations;
-
-double lastPosition;
-double wantedPosition;
-double startPosition;
-double radius;
-double speedModifier = 5;
-double minus;
 
 const double oneRotation = 2 * M_PI;
 
@@ -52,7 +44,7 @@ void DynamixelMotor::init()
 {
     wantedPosition = 0;
     lastPosition = 0;
-
+    rotations = 0;
 
 }
 
@@ -98,13 +90,15 @@ void DynamixelMotor::initCompleted()
 
 
     startPosition = lastPosition;
+    wantedPosition = 0;
 }
 
 void DynamixelMotor::runIntoLimit()
 {
     setSpeed(-0.7);
 
-
+    ros::Rate waitRate(0.1);
+    waitRate.sleep();
 
     initCompleted();
 }
@@ -114,7 +108,7 @@ void DynamixelMotor::updateSpeed()
     if(startPosition == 0.0){
         return;
     }
-    double fullLastPosition = oneRotation * rotations + lastPosition;
+    double fullLastPosition = oneRotation * rotations + lastPosition -startPosition;
 
     double changeInPosition = (wantedPosition/radius) - fullLastPosition;
 
@@ -168,9 +162,14 @@ void DynamixelMotor::gotoPosition(double position)
 }
 
 void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr &mes) {
-    double cur_pos = mes->current_pos + minus;
+    double cur_pos = static_cast<double>(mes->current_pos);
 
-    if(lastPosition != 0){
+    if(cur_pos < 0.001)
+    {
+        int i = 0;
+    }
+
+    if(fabs(lastPosition) > 1E-31){
         if(fabs(cur_pos - lastPosition) > 2)
         {
             setSpeed(0);
@@ -184,5 +183,7 @@ void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr
         }
     }
     lastPosition = cur_pos;
-    updateSpeed();
+    if(fabs(startPosition) > 1E-31) {
+        updateSpeed();
+    }
 }

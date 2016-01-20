@@ -10,13 +10,23 @@
 
 class DynamixelMotor {
 
-protected:
+private:
     ros::NodeHandle nh_;
 
     ros::Publisher MX_Pub;
     ros::Subscriber MX_Sub;
 
     void init();
+
+    int rotations;
+
+    double lastPosition;
+    double wantedPosition;
+    double startPosition;
+    double radius;
+    double speedModifier = 5;
+    double minus;
+
 public:
 
     DynamixelMotor() : nh_("~"){

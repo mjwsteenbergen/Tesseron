@@ -29,7 +29,7 @@ protected:
 
     ros::Publisher statusPublisher;
 
-
+    double startPosRad;
 
     void resetArms();
 

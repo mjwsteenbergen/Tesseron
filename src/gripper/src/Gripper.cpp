@@ -39,8 +39,6 @@ void Gripper::init()
     PickUpClient  = nh_.advertiseService("pickup" , &Gripper::handlePickUp, this );
     MoveClient    = nh_.advertiseService("move" ,   &Gripper::handleMove, this );
 
-//    RX_Pub    = nh_.advertise<std_msgs::Float64>("/tilt_controller/command" , 1000);
-//    MX_Pub    = nh_.advertise<std_msgs::Float64>("/pan_controller/command" , 1000);
     PS3_Sub   = nh_.subscribe("/basecontrol", 50, &Gripper::TwistCallback, this);
     Tilt_Command = nh_.serviceClient<dynamixel_controllers::SetSpeed>("/tilt_controller/set_speed");
 
@@ -69,11 +67,6 @@ void Gripper::initialiseSpindle() {
 
     spindle = new C3mxlROS(name.c_str());
 
-
-
-
-//    spindle->set3MxlMode(PWM_MODE);
-//    spindle->setGearboxRatioMotor(3.0);
     CDxlConfig spindleConfig;
     spindleConfig.readConfig(configuration.root().section("left"));
 
@@ -93,12 +86,51 @@ void Gripper::initialiseSpindle() {
         init_rate.sleep();
     }
 
-//    DXL_SAFE_CALL(spindle->set3MxlMode(EXTERNAL_INIT));
-//    DXL_SAFE_CALL(spindle->setAcceleration(1));
-//    DXL_SAFE_CALL(spindle->setSpeed(-0.3));
-//    DXL_SAFE_CALL(spindle->setTorque(-0.1));
+    DXL_SAFE_CALL(spindle->set3MxlMode(EXTERNAL_INIT));
+    DXL_SAFE_CALL(spindle->setAcceleration(2));
+    DXL_SAFE_CALL(spindle->setSpeed(8));
+    DXL_SAFE_CALL(spindle->setTorque(3));
+
+    ros::Rate first_sleep(1.0/2.0);
+    first_sleep.sleep();
+
+    ros::Rate loop_rate(10);
+    double prev = 0.0;
+    while(ros::ok())
+    {
+        spindle->getLog();
+        int pstat = spindle->presentStatus();
+        int pstat2 = spindle->present3MxlMode();
+
+        int i = spindle->get3MxlMode();
+        double pspeed = spindle->presentPos();
+        double ls = spindle->getLinearPos();
+        double ls2 = spindle->getPos();
+
+//        if (pstat == M3XL_STATUS_INIT_DONE ||  pspeed == 0)
+//        {
+            if(prev == pspeed && pspeed != 0)
+//            if(stopped == 10)
+            {
+                int i2q23 = 0;
+                break;
+//            }
+//            else{
+//                stopped++;
+//            }
+            //break;
+        }
+        else
+        {
+            ROS_INFO("Waiting for dynamixel to initialize");
+            prev = pspeed;
+        }
+        loop_rate.sleep();
+
+    }
 
     ROS_INFO("Spindle initialised");
+
 
 
 }
@@ -118,8 +150,8 @@ void Gripper::initialiseGearBar() {
 
 
 
-    //MX.setMotorName("/pan_controller/", 3E-02);
-    RX.setMultiplier(30);
+    MX.setMotorName("/pan_controller/", 3E-02);
+    MX.runIntoLimit();
     RX.setMinus(2.62);
     RX.setMotorName("/tilt_controller/", 16E-3);
     RX.initCompleted();
@@ -172,7 +204,8 @@ void Gripper::handleMoveSpindle(gripper::MoveGripperRequest_<std::allocator<void
 
     int state = spindle->getState();
 
-    double startPosRad = spindle->presentPos();
+
+    startPosRad = spindle->presentPos();
 
     spindle->set3MxlMode(POSITION_MODE);
 
@@ -218,7 +251,7 @@ void Gripper::loop()
 //        spindle->getState();
 
 
-//        MX.loopOnce();
+        MX.loopOnce();
         RX.loopOnce();
 
         //double d = (2*M_PI + 0.4*M_PI);
@@ -306,7 +339,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Gripper");
     Gripper grip;
-    grip.RX.gotoPosition(0.12);
+    //grip.RX.gotoPosition(0.13);
     grip.loop();
 //    gripper::MoveGripperRequest req;
 
