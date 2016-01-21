@@ -153,6 +153,7 @@ void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
 
 		ROS_INFO("Message recieved %f", msg->linear.x);
 	left_motor_->setSpeed(msg->linear.x);
+	right_motor_->setSpeed(msg->linear.y);
 //		left_motor_->setLinearSpeed(msg->linear.y + msg->angular.z);
 //		right_motor_->setLinearSpeed(msg->linear.y - msg->angular.z);
 

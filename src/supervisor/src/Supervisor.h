@@ -5,6 +5,7 @@
 #ifndef SUPERVISOR_SUPERVISOR_H
 #define SUPERVISOR_SUPERVISOR_H
 
+#include <sensor_msgs/Joy.h>
 #include "ros/ros.h"
 #include "supervisor/StatusMessage.h"
 #include "Tile.h"
@@ -20,6 +21,11 @@ protected:
     ros::ServiceClient gripperService;
     ros::ServiceClient wheelService;
     ros::ServiceClient layDownService;
+
+    ros::Publisher gripper_Publisher;
+    ros::Publisher base_Publisher;
+
+
 
 public:
     Supervisor() : nh_("~")
@@ -45,6 +51,11 @@ public:
     void readyNextTile(TileColor color);
 
     void getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]);
+
+    void manualControl(double baseL, double baseR, double spindle, double dynamixelBar, double dynamixelPlacer);
+
+    void joystickFeedback(const boost::shared_ptr<const sensor_msgs::Joy_ <allocator<void>>> &joy);
+
 };
 
 

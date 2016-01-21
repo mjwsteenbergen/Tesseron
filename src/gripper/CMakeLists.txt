@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
         FILES
         StatusMessage.msg
+        Speed.msg
 )
 add_service_files(FILES MoveGripper.srv LayDown.srv PickUp.srv)
 
@@ -31,7 +32,7 @@ generate_messages(
         std_msgs  # Or other packages containing msgs
 )
 
-add_executable(gripper src/Gripper.cpp src/DynamixelMotor.cpp)
+add_executable(gripper src/Gripper.cpp src/DynamixelMotor.cpp src/Threemxl.cpp src/Threemxl.h)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

@@ -1,3 +1,0 @@
-float64 spindle
-float64 dynamixel_bar
-float64 dynamixel_placer

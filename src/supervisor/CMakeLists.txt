@@ -19,7 +19,7 @@ generate_messages(
         std_msgs  # Or other packages containing msgs
 )
 
-add_executable(supervisor src/Supervisor.cpp src/ImageReader.cpp src/Tile.cpp)
+add_executable(supervisor src/Supervisor.cpp src/ImageReader.cpp src/Tile.cpp src/JoyStick.h)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

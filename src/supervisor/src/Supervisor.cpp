@@ -7,8 +7,14 @@
 #include "supervisor/Wheel.h"
 #include "supervisor/LayDown.h"
 #include "supervisor/PickUp.h"
+#include "JoyStick.h"
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Joy.h>
+#include <JoyStick.h>
+
 
 static const std::string filename = "/home/newnottakenname/Coding/Tesseron/image";
+
 
 int main(int argc, char **argv)
 {
@@ -17,6 +23,7 @@ int main(int argc, char **argv)
     sups.layFloor();
 
 }
+
 
 void Supervisor::init() {
     numberOfBootedNodes = 0;
@@ -38,6 +45,9 @@ void Supervisor::init() {
     gripperService = n.serviceClient<supervisor::Gripper>("Gripper");
     wheelService = n.serviceClient<supervisor::Wheel>("Wheel");
     layDownService = n.serviceClient<supervisor::LayDown>("LayDown");
+
+    gripper_Publisher = n.advertise<geometry_msgs::Twist_>("/grippercontrol", 5);
+    base_Publisher = n.advertise<geometry_msgs::Twist_>("/basecontrol", 5);
 }
 
 void Supervisor::getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]){
@@ -164,4 +174,60 @@ void Supervisor::pickupTile(bool fully) {
 void Supervisor::readyNextTile(TileColor color) {
     //TODO maybe add service?
 
+}
+
+void Supervisor::manualControl(double baseL, double baseR, double spindle, double dynamixelBar, double dynamixelPlacer)
+{
+    geometry_msgs::Twist msg;
+    msg.linear.x = dynamixelBar;
+    msg.linear.y = spindle;
+    msg.angular.z = dynamixelPlacer;
+
+    gripper_Publisher.publish(msg);
+
+    geometry_msgs::Twist msg2;
+    msg2.linear.x = baseL;
+    msg2.linear.y = baseR;
+    base_Publisher.publish(msg2);
+}
+
+bool stop = true;
+
+void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
+{
+    if(joy->buttons[PS3_BUTTON_START] > 0.001)
+    {
+        stop = false;
+    }
+
+    if(joy->buttons[PS3_BUTTON_ACTION_CROSS] > 0.0001 | stop)
+    {
+        manualControl(0,0,0,0,0);
+        stop = true;
+        return;
+    }
+
+    double base = joy->axes[PS3_AXIS_STICK_LEFT_UPWARDS];
+    double baseL = 0;
+    double baseR = 0;
+    double joyLeft = joy->axes[PS3_AXIS_STICK_LEFT_LEFTWARDS];
+    double dynaBar = joy->axes[PS3_AXIS_STICK_RIGHT_LEFTWARDS];
+    double spindle = joy->axes[PS3_AXIS_STICK_RIGHT_UPWARDS];
+    double down = joy->axes[PS3_AXIS_BUTTON_REAR_RIGHT_1];
+    double up = joy->axes[PS3_AXIS_BUTTON_REAR_RIGHT_2];
+    if(joyLeft > 0)
+    {
+        baseL = joyLeft;
+    }
+    else{
+        baseR = -1 * joyLeft;
+    }
+
+    if(down > 0.001 && up > 0.001)
+    {
+        up = 0;
+        down = 0;
+    }
+
+    manualControl(baseL + base, baseR + base, spindle, dynaBar, up - down);
 }
