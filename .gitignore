@@ -1,7 +1,6 @@
 build/
 devel/
 src/CMakeLists.txt
-include/
 *~
 .idea/
 /*~

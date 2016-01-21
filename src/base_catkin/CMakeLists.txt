@@ -26,6 +26,8 @@ add_message_files(
    MotorStatus.msg
 )
 
+add_service_files(FILES Wheel.srv)
+
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES

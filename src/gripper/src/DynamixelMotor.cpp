@@ -85,7 +85,7 @@ void DynamixelMotor::initCompleted()
         ros::spinOnce();
         ros::Rate sleep(1);
         sleep.sleep();
-        ROS_INFO(std::to_string(i).c_str());
+        //ROS_INFO(std::to_string(i).c_str());
     }
 
 

@@ -6,7 +6,7 @@
  *
  * Versions:
  * 1.0		Initial version
- *  
+ *
  */
 #include <threemxl/platform/io/configuration/XMLConfiguration.h>
 #include <threemxl/dxlassert.h>
@@ -28,7 +28,7 @@ void Base::init() {
 	ROS_ASSERT(nh_.getParam("motor_config", motor_config_name));
 	ROS_ASSERT(nh_.getParam("wheel_diameter", wheel_diameter_));
 	ROS_ASSERT(nh_.getParam("wheel_base", wheel_base_));
-	
+
 
 
 	// Subscriptions to command topic
@@ -106,7 +106,20 @@ void Base::drive(base_catkin::Wheel::Request request, base_catkin::Wheel::Respon
 
 std::string Base::drive(float distance)
 {
-	return "Not Implemented";
+	int state = left_motor_->getState();
+	int state2 = right_motor_->getState();
+
+
+    double startPosRad = left_motor_->presentPos();
+
+    left_motor_ ->set3MxlMode(POSITION_MODE);
+    right_motor_->set3MxlMode(POSITION_MODE);
+
+    double speed = (distance / 0.004) * 2 * M_PI;
+
+    //
+    left_motor_ ->setPos(startPosRad + speed, 8*M_PI, 32*M_PI, false);
+    right_motor_->setPos(startPosRad + speed, 8*M_PI, 32*M_PI, false);
 }
 
 
@@ -173,7 +186,7 @@ void Base::publishStatus() {
  */
 int main(int argc, char **argv)
 {
-	
+
 	ros::init(argc, argv, "base");
 	Base base;
 	base.spin();
