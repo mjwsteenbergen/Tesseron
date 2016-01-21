@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(beginner_tutorials)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs cv_bridge)
+find_package(OpenCV REQUIRED)
+
 
 ## Declare ROS messages and services
 #add_message_files(FILES Num.msg)
@@ -15,7 +17,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs)
 catkin_package()
 
 ## Build talker and listener
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_LIBRARIES})
+
 
 add_executable(talker src/talker.cpp)
 target_link_libraries(talker ${catkin_LIBRARIES})
@@ -23,4 +26,5 @@ add_dependencies(talker beginner_tutorials_generate_messages_cpp)
 
 add_executable(listener src/listener.cpp)
 target_link_libraries(listener ${catkin_LIBRARIES})
+target_link_libraries(listener ${OpenCV_LIBRARIES})
 add_dependencies(listener beginner_tutorials_generate_messages_cpp)

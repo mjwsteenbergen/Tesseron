@@ -1,7 +1,8 @@
-# Generic MoveIt Travis Continuous Integration Configuration File
-# Works with all MoveIt! repositories/branches
-# Author: Dave Coleman, Jonathan Bohren
+# Generic Travis Continuous Integration Configuration File
+# Works with ROS-Indigo
+# Built on the build log from: Dave Coleman, Jonathan Bohren
 sudo: true
+dist: trusty
 language:
   - cpp
 compiler:
@@ -11,21 +12,24 @@ notifications:
     on_failure: always #[always|never|change] # default: always
 before_install: # Use this to prepare the system to install prerequisites or dependencies
   # Define some config vars
-  - export ROS_DISTRO=hydro
+  - export ROS_DISTRO=indigo
   - export CI_SOURCE_PATH=$(pwd)
   - export REPOSITORY_NAME=${PWD##*/}
-  - echo "Testing branch $TRAVIS_BRANCH of $REPOSITORY_NAME"
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
-  - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-catkin ros-$ROS_DISTRO-ros
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+  - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-catkin ros-$ROS_DISTRO-ros
+  #Install Your Dependencies
+  - sudo apt-get -qq install ros-$ROS_DISTRO-opencv3 ros-$ROS_DISTRO-cv-bridge
   # Setup rosdep
   - sudo rosdep init
   - rosdep update
 install: # Use this to install any prerequisites or dependencies necessary to run your bui
   # Install dependencies for source repos
   - rosdep install --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
+  - export PYTHONPATH=/usr/share/pyshared:/usr/lib/pymodules/python2.7:/opt/ros/$ROS_DISTRO/lib/python2.7/dist-packages:/usr/lib/python2.7/dist-packages:${PYTHONPATH}
 before_script: # Use this to prepare your build for testing e.g. copy database configurations, environment variables, etc.
-  - source /opt/ros/$ROS_DISTRO/setup.bash  
+  - source /opt/ros/$ROS_DISTRO/setup.bash 
+  - printenv | grep ROS 
 script: # All commands must exit with code 0 on success. Anything else is considered failure.
   - catkin_make
