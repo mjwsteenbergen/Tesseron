@@ -29,7 +29,7 @@ void Supervisor::init() {
     numberOfBootedNodes = 0;
     ROS_INFO("Looking for nodes..");
     ros::Rate r(10);
-    s_ = nh_.subscribe("/Tesseron/init", 50, &Supervisor::nodeInitialised, this);
+    init_subscriber = nh_.subscribe("/Tesseron/init", 50, &Supervisor::nodeInitialised, this);
 
     while(numberOfBootedNodes != numberOfNodes && ros::ok())
     {
