@@ -1,0 +1,5 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<node name="supervisor" pkg="supervisor" type="supervisor" output="screen"/>
+</launch>

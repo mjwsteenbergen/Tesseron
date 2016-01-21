@@ -337,6 +337,7 @@ void Gripper::STOP() {
 
 int main(int argc, char **argv)
 {
+    ROS_WARN("BOOTING...");
     ros::init(argc, argv, "Gripper");
     Gripper grip;
     //grip.RX.gotoPosition(0.13);
