@@ -90,14 +90,14 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
 void Gripper::resetArms() {
     //TODO
 
-    if(resetGearBar() && resetSpindle()) { //Something went wrong
-        gripper::StatusMessage message;
-        message.completed = (unsigned char) true;
-        message.error = "";
-        message.sender = "Gripper";
-        statusPublisher.publish(message);
-    }
-    sendErrorMessage("Not Implemented", "Gripper");
+//    if(resetGearBar() && resetSpindle()) { //Something went wrong
+//        gripper::StatusMessage message;
+//        message.completed = (unsigned char) true;
+//        message.error = "";
+//        message.sender = "Gripper";
+//        statusPublisher.publish(message);
+//    }
+//    sendErrorMessage("Not Implemented", "Gripper");
 }
 
 void Gripper::setSpeed(double speedMX, double speedSpindle, double speedRX)

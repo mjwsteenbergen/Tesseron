@@ -6,7 +6,6 @@
 #include <ros/rate.h>
 #include <ros/assert.h>
 #include <threemxl/dxlassert.h>
-#include <threemxl/C3mxlROS.h>
 #include <threemxl/dxlassert.h>
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
 #include "Threemxl.h"

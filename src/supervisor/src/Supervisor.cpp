@@ -10,7 +10,6 @@
 #include "JoyStick.h"
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
-#include <JoyStick.h>
 
 
 static const std::string filename = "/home/newnottakenname/Coding/Tesseron/image";
@@ -46,8 +45,8 @@ void Supervisor::init() {
     wheelService = n.serviceClient<supervisor::Wheel>("Wheel");
     layDownService = n.serviceClient<supervisor::LayDown>("LayDown");
 
-    gripper_Publisher = n.advertise<geometry_msgs::Twist_>("/grippercontrol", 5);
-    base_Publisher = n.advertise<geometry_msgs::Twist_>("/basecontrol", 5);
+    gripper_Publisher = n.advertise<geometry_msgs::Twist>("/grippercontrol", 5);
+    base_Publisher = n.advertise<geometry_msgs::Twist>("/basecontrol", 5);
 }
 
 void Supervisor::getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]){

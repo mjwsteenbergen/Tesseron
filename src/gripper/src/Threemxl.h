@@ -5,6 +5,8 @@
 #ifndef GRIPPER_THREEMXL_H
 #define GRIPPER_THREEMXL_H
 
+#include <threemxl/C3mxlROS.h>
+
 
 class Threemxl {
 

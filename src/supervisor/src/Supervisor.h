@@ -54,8 +54,8 @@ public:
 
     void manualControl(double baseL, double baseR, double spindle, double dynamixelBar, double dynamixelPlacer);
 
-    void joystickFeedback(const boost::shared_ptr<const sensor_msgs::Joy_ <allocator<void>>> &joy);
 
+    void joystickFeedback(const sensor_msgs::Joy_<std::allocator<void> >::ConstPtr &joy);
 };
 
 
