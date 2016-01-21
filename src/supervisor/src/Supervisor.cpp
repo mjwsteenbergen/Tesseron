@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 }
 
 
+
 void Supervisor::init() {
     numberOfBootedNodes = 0;
     ROS_INFO("Looking for nodes..");
@@ -47,6 +48,8 @@ void Supervisor::init() {
 
     gripper_Publisher = n.advertise<geometry_msgs::Twist>("/grippercontrol", 5);
     base_Publisher = n.advertise<geometry_msgs::Twist>("/basecontrol", 5);
+
+    joy_subscriber = nh_.subscribe("/joy", 50, &Supervisor::joystickFeedback, this);
 }
 
 void Supervisor::getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]){

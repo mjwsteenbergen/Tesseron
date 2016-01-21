@@ -17,7 +17,9 @@ protected:
     ros::NodeHandle nh_;
     const static int numberOfNodes = 2;
     int numberOfBootedNodes;
-    ros::Subscriber s_;
+    
+    ros::Subscriber joy_subscriber;
+
     ros::ServiceClient gripperService;
     ros::ServiceClient wheelService;
     ros::ServiceClient layDownService;
