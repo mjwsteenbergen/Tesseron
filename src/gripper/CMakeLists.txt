@@ -23,7 +23,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
         FILES
         StatusMessage.msg
-        Speed.msg
 )
 add_service_files(FILES MoveGripper.srv LayDown.srv PickUp.srv)
 
