@@ -11,47 +11,63 @@
 #include "dynamixel_controllers/StartController.h"
 #include "dynamixel_controllers/SetSpeed.h"
 #include "std_msgs/Float64.h"
+#include "std_msgs/Bool.h"
 #include "DynamixelMotor.h"
 #include <iostream>
 #include <string>
 #include <math.h>
 #include <thread>
 
+bool initialised = false;
+
 void Gripper::sendErrorMessage(const std::string message_body, const std::string sender) {
-    ROS_WARN(message_body.c_str(), "Gripper");
-    gripper::StatusMessage message;
-    message.completed = (unsigned char) false;
-    message.error = message_body;
-    message.sender = sender;
-    statusPublisher.publish(message);
+//    ROS_WARN(message_body.c_str(), "Gripper");
+//    gripper::StatusMessage message;
+//    message.completed = (unsigned char) false;
+//    message.error = message_body;
+//    message.sender = sender;
+//    initPublisher.publish(message);
 }
 
 
 void Gripper::init()
 {
-    LaydownClient = nh_.advertiseService("laydown", &Gripper::handleLayDown, this);
-    PickUpClient  = nh_.advertiseService("pickup" , &Gripper::handlePickUp, this );
-    MoveClient    = nh_.advertiseService("move" ,   &Gripper::handleMove, this );
+    LaydownClient = nh_.advertiseService("/laydown", &Gripper::handleLayDown, this);
+    PickUpClient  = nh_.advertiseService("/pickup" , &Gripper::handlePickUp, this );
+    MoveClient    = nh_.advertiseService("/Gripper" ,&Gripper::handleMove, this );
 
-    speedTopic = nh_.subscribe("/grippercontrol", 50, &Gripper::TwistCallback, this);
+    speedTopic = nh_.subscribe("/grippercontrol", 1, &Gripper::TwistCallback, this);
 
     //StatusPublisher
-    statusPublisher = nh_.advertise<gripper::StatusMessage>("Tesseron/init", 10);
+    initPublisher = nh_.advertise<std_msgs::Bool>("/Tesseron/init", 10);
 
-    initialise();
+    if(initialise())
+    {
+        ros::Rate rate(1);
+        ros::spinOnce();
+        rate.sleep();
+
+        std_msgs::Bool msg;
+        msg.data = true;
+        initPublisher.publish(msg);
+    }
+
+
 
     //resetArms();
 }
 
 
 
-void Gripper::initialise() {
+bool Gripper::initialise() {
+//    MX.setMotorName("/pan_controller/", 3E-02);
+//    MX.runIntoLimit();
+//    RX.setMinus(2.62);
+//    RX.setMotorName("/tilt_controller/", 16E-3);
+//    RX.initCompleted();
     spindle.initialise();
-    MX.setMotorName("/pan_controller/", 3E-02);
-    MX.runIntoLimit();
-    RX.setMinus(2.62);
-    RX.setMotorName("/tilt_controller/", 16E-3);
-    RX.initCompleted();
+
+    initialised = true;
 
     ROS_INFO("Dynamixel initialised");
 }
@@ -95,7 +111,7 @@ void Gripper::resetArms() {
 //        message.completed = (unsigned char) true;
 //        message.error = "";
 //        message.sender = "Gripper";
-//        statusPublisher.publish(message);
+//        initPublisher.publish(message);
 //    }
 //    sendErrorMessage("Not Implemented", "Gripper");
 }
@@ -114,8 +130,8 @@ void Gripper::loop()
 //
 
 
-        MX.loopOnce();
-        RX.loopOnce();
+//        MX.loopOnce();
+//        RX.loopOnce();
         spindle.loop();
 
         //double d = (2*M_PI + 0.4*M_PI);
@@ -158,16 +174,16 @@ int main(int argc, char **argv)
     ROS_INFO("BOOTING...");
     ros::init(argc, argv, "Gripper");
     Gripper grip;
-    grip.RX.gotoPosition(0.13);
+//    grip.MX.gotoPosition(0.2);
+    grip.spindle.move(-0.05);
     grip.loop();
     gripper::MoveGripperRequest req;
 
 }
 
 void Gripper::TwistCallback(const geometry_msgs::Twist::ConstPtr &msg) {
-
-    setSpeed(msg->linear.x, msg->linear.y, msg->angular.z);
-
-
-
+    if(initialised)
+    {
+        setSpeed(msg->linear.x, msg->linear.y * 5, msg->angular.z);
+    }
 }

@@ -2,7 +2,7 @@
 
 <launch>
 	<include file="$(find gripper)/launch/gripper.launch"/>
-	<include file="$(find gripper)/launch/base.launch"/>
-	<include file="$(find gripper)/launch/supervisor.launch"/>
+	<include file="$(find base_catkin)/launch/base.launch"/>
+	<include file="$(find supervisor)/launch/supervisor.launch"/>
 
 </launch>

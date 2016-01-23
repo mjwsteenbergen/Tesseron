@@ -33,6 +33,12 @@ class Base {
 	ros::Subscriber		vel_sub_;
 	ros::Publisher		status_pub_;
 
+	ros::ServiceServer wheelClient;
+
+	ros::Publisher statusPublisher;
+	ros::Publisher initPublisher;
+
+
 	C3mxlROS*		left_motor_;
 	C3mxlROS*		right_motor_;
 
@@ -75,9 +81,12 @@ class Base {
 	 * Await and process commands
 	 */
 	void spin();
-	void drive(base_catkin::Wheel::Request request, base_catkin::Wheel::Response response);
+	bool drive(base_catkin::Wheel::Request &req, base_catkin::Wheel::Response &res);
 	std::string drive(float distance);
 	void initService();
+	void sendInitMessage();
+	void initBase();
+
 };
 
 

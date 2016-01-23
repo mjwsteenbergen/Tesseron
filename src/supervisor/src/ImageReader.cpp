@@ -12,16 +12,12 @@ using namespace std;
 
 
 
-void ImageReader::GetImage(std::string path, TileColor imageColors[MOSAIC_SIZE][MOSAIC_SIZE])
+void ImageReader::GetImage(std::string path, char imageColors[MOSAIC_SIZE][MOSAIC_SIZE])
 {
-    int imageData[MOSAIC_SIZE][MOSAIC_SIZE];
-    ImageReader::ReadImage(path, imageData);
-
-
-    ConvertToColor(imageData, imageColors);
+    ImageReader::ReadImage(path, imageColors);
 }
 
-void ImageReader::ReadImage(std::string path, int imageData[MOSAIC_SIZE][MOSAIC_SIZE])
+void ImageReader::ReadImage(std::string path, char imageData[MOSAIC_SIZE][MOSAIC_SIZE])
 {
 
     std::string line;
@@ -36,7 +32,9 @@ void ImageReader::ReadImage(std::string path, int imageData[MOSAIC_SIZE][MOSAIC_
             cout << line << "\n";
             for(int j=0; j < MOSAIC_SIZE; j++){
                 char c = line.c_str()[j];
-                imageData[i][j] = (int)c - (int)'0';
+                if(c == 'A' || c == 'B' || c == 'C' ||c == 'D') {
+                    imageData[i][j] = c;
+                }
             }
         }
         myfile.close();
@@ -45,15 +43,6 @@ void ImageReader::ReadImage(std::string path, int imageData[MOSAIC_SIZE][MOSAIC_
     else cout << "Unable to open file";
     {
 
-    }
-}
-
-void ImageReader::ConvertToColor(int imageData[MOSAIC_SIZE][MOSAIC_SIZE], TileColor imageColors[MOSAIC_SIZE][MOSAIC_SIZE]){
-    for(int i = 0; i < MOSAIC_SIZE; i++)
-    {
-        for (int j = 0; j < MOSAIC_SIZE; ++j) {
-            imageColors[i][j] = Tile::ConvertToColor(imageData[i][j]);
-        }
     }
 }
 

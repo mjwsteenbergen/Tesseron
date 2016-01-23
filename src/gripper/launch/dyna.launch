@@ -1,0 +1,9 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<node name="motor_comm" pkg="shared_serial" type="server">
+		<param name="port_name" value="/dev/ttyUSB2"/>
+		<param name="port_type" value="RS485_FTDI"/>
+		<param name="baud_rate" value="1000000"/>
+	</node>
+</launch>

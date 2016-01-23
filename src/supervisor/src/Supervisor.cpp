@@ -3,12 +3,13 @@
 //
 
 #include "Supervisor.h"
-#include "supervisor/Gripper.h"
+#include "supervisor/MoveGripper.h"
 #include "supervisor/Wheel.h"
 #include "supervisor/LayDown.h"
 #include "supervisor/PickUp.h"
 #include "JoyStick.h"
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Char.h>
 #include <sensor_msgs/Joy.h>
 
 
@@ -19,19 +20,29 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "supervisor");
     Supervisor sups;
-    sups.layFloor();
 
+    //sups.toManualControl();
+
+    sups.toAutomaticControl();
+//    sups.layFloor();
+//    sups.getTile('B');
 }
 
+void Supervisor::toManualControl() {
+    ros::NodeHandle n;
+    gripper_Publisher = n.advertise<geometry_msgs::Twist>("/grippercontrol", 1);
+    base_Publisher = n.advertise<geometry_msgs::Twist>("/basecontrol", 1);
+    joy_subscriber = nh_.subscribe("/joy", 50, &Supervisor::joystickFeedback, this);
+    ros::spin();
+}
 
-
-void Supervisor::init() {
+void Supervisor::toAutomaticControl() {
     numberOfBootedNodes = 0;
     ROS_INFO("Looking for nodes..");
     ros::Rate r(10);
     init_subscriber = nh_.subscribe("/Tesseron/init", 50, &Supervisor::nodeInitialised, this);
 
-    while(numberOfBootedNodes != numberOfNodes && ros::ok())
+    while(numberOfBootedNodes < numberOfNodes && ros::ok())
     {
         ros::spinOnce();
         r.sleep();
@@ -42,36 +53,82 @@ void Supervisor::init() {
     //Create Clients (Services)
 
     ros::NodeHandle n;
-    gripperService = n.serviceClient<supervisor::Gripper>("Gripper");
-    wheelService = n.serviceClient<supervisor::Wheel>("Wheel");
-    layDownService = n.serviceClient<supervisor::LayDown>("LayDown");
+    gripperService = n.serviceClient<supervisor::MoveGripper>("/Gripper");
+    wheelService = n.serviceClient<supervisor::Wheel>("/base/Wheels");
+    layDownService = n.serviceClient<supervisor::LayDown>("/laydown");
+    pickUpService = n.serviceClient<supervisor::PickUp>("/pickup");
 
-    gripper_Publisher = n.advertise<geometry_msgs::Twist>("/grippercontrol", 5);
-    base_Publisher = n.advertise<geometry_msgs::Twist>("/basecontrol", 5);
+    tile_pusherService = n.advertise<std_msgs::Char>("/pushtile", 5);
 
-    joy_subscriber = nh_.subscribe("/joy", 50, &Supervisor::joystickFeedback, this);
+    //testAllTheThings();
 }
 
-void Supervisor::getInstructions(TileColor image[MOSAIC_SIZE][MOSAIC_SIZE]){
+void Supervisor::testAllTheThings()
+{
+    ros::Rate sleep(0.3);
+
+    sleep.sleep();
+
+//    supervisor::MoveGripper req1;
+//    gripperService.call(req1);
+//
+//    supervisor::Wheel req2;
+//    req2.request.distance = 0.0;
+//    wheelService.call(req2);
+//
+//    supervisor::LayDown req3;
+//    layDownService.call(req3);
+//
+//    supervisor::PickUp req4;
+//    pickUpService.call(req4);
+
+    std_msgs::Char pub1;
+    pub1.data = 'A';
+    tile_pusherService.publish(pub1);
+
+    ros::spinOnce();
+    sleep.sleep();
+
+    pub1.data = 'B';
+    tile_pusherService.publish(pub1);
+
+    ros::spinOnce();
+    sleep.sleep();
+
+    pub1.data = 'C';
+    tile_pusherService.publish(pub1);
+
+    ros::spinOnce();
+    sleep.sleep();
+
+    pub1.data = 'D';
+    tile_pusherService.publish(pub1);
+
+
+//    geometry_msgs::Twist pub2;
+//    gripper_Publisher.publish(pub2);
+//    base_Publisher.publish(pub2);
+//
+    ros::spin();
+}
+
+void Supervisor::getInstructions(char image[MOSAIC_SIZE][MOSAIC_SIZE]){
     ImageReader reader;
     reader.GetImage(filename, image);
 }
 
-void Supervisor::nodeInitialised(const supervisor::StatusMessage::ConstPtr &message) {
-    if(message.get()->completed == false)
-    {
-        ROS_ERROR("Node %s could not boot correctly. Error message: %s", message.get()->sender.c_str(), message.get()->error.c_str());
-    }
-    else
-    {
-        numberOfBootedNodes++;
-        ROS_INFO("Node %i booted", numberOfBootedNodes);
-    }
+void Supervisor::nodeInitialised(const std_msgs::Bool::ConstPtr &mes) {
+    numberOfBootedNodes++;
+    ROS_INFO("Node %i booted", numberOfBootedNodes);
+}
+
+void Supervisor::nodeError(const supervisor::ErrorMessage::ConstPtr &message) {
+    ROS_ERROR("Node %s had a problem. Error message: %s", message.get()->sender.c_str(), message.get()->error.c_str());
 }
 
 void Supervisor::layFloor() {
 
-    TileColor image[MOSAIC_SIZE][MOSAIC_SIZE];
+    char image[MOSAIC_SIZE][MOSAIC_SIZE];
     getInstructions(image);
 
     for(int i = 0; i < MOSAIC_SIZE; i++)
@@ -106,7 +163,7 @@ void Supervisor::moveBack(int distance) {
 }
 
 void Supervisor::moveTo(int x, int y) {
-    supervisor::Gripper srv;
+    supervisor::MoveGripper srv;
     srv.request.x = x;
     srv.request.y = y;
     if (gripperService.call(srv))
@@ -137,23 +194,34 @@ void Supervisor::dropTile(bool b) {
     }
 }
 
-void Supervisor::getTile(TileColor color) {
+void Supervisor::getTile(char color) {
 
     int defaultx = 0;
     int defaulty = 0;
-    switch (color)
+    if(color == 'A')
     {
-        case Blue:
-            moveTo(defaultx, defaulty); // Move to pickup point //TODO
-            break;
-        default:
-            ROS_ERROR("There is no color like this. Please check color spectrum");
-            break;
+        int i = 0;
+        //moveTo(defaultx, defaulty);
+    }
+    else if(color == 'B')
+    {
+        int i = 1;
+    }
+    else if(color == 'C')
+    {
+        int i = 2;
+    }
+    else if(color == 'D')
+    {
+        int i = 3;
+    }
+    else {
+        ROS_ERROR("There is no color like this. Please check color spectrum");
     }
 
-    pickupTile(false);
+    //pickupTile(false);
 
-    readyNextTile(color);
+    //readyNextTile(color);
 
 }
 
@@ -173,8 +241,17 @@ void Supervisor::pickupTile(bool fully) {
     }
 }
 
-void Supervisor::readyNextTile(TileColor color) {
-    //TODO maybe add service?
+void Supervisor::readyNextTile(char color) {
+    if(color == 'A' || color == 'B' || color == 'C' ||color == 'D'){
+        std_msgs::Char msg;
+        msg.data = (unsigned char) color;
+        tile_pusherService.publish(msg);
+    }
+    else
+    {
+        ROS_ERROR("Not a valid char!");
+    }
+
 
 }
 
@@ -197,6 +274,10 @@ bool stop = true;
 
 void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
 {
+    if(joy->axes[23] != 0.0 | joy->axes[24] != 0.0 | joy->axes[25] != 0.0 )
+    {
+        return;
+    }
     if(joy->buttons[PS3_BUTTON_START] > 0.001)
     {
         stop = false;
@@ -215,8 +296,8 @@ void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
     double joyLeft = joy->axes[PS3_AXIS_STICK_LEFT_LEFTWARDS];
     double dynaBar = joy->axes[PS3_AXIS_STICK_RIGHT_LEFTWARDS];
     double spindle = joy->axes[PS3_AXIS_STICK_RIGHT_UPWARDS];
-    double down = joy->axes[PS3_AXIS_BUTTON_REAR_RIGHT_1];
-    double up = joy->axes[PS3_AXIS_BUTTON_REAR_RIGHT_2];
+    double down = static_cast<double>(joy->axes[13]);
+    double up = static_cast<double>(joy->axes[15]);
     if(joyLeft > 0)
     {
         baseL = joyLeft;
@@ -231,5 +312,7 @@ void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
         down = 0;
     }
 
-    manualControl(baseL + base, baseR + base, spindle, dynaBar, up - down);
+    manualControl(baseL + base, baseR + base, spindle, up - down, dynaBar);
 }
+
+

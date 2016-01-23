@@ -6,10 +6,4 @@
 		<param name="wheel_diameter" value="0.15"/>
 		<param name="wheel_base" value="0.535"/>
 	</node>
-
-	<node name="motor_comm" pkg="shared_serial" type="server" output="screen">
-		<param name="port_name" value="/dev/ttyUSB0"/>
-		<param name="port_type" value="RS485_FTDI"/>
-		<param name="baud_rate" value="921600"/>
-	</node>
 </launch>

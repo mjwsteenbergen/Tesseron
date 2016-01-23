@@ -1,0 +1,8 @@
+#!/bin/bash
+# My first script
+
+gnome-terminal -e "sh gripper"
+source /opt/ros/indigo/setup.bash
+source /home/newnottakenname/Coding/Tesseron/devel/setup.bash
+roslaunch gripper code.launch
+read -p "Press [Enter] key to exit..."

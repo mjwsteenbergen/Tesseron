@@ -7,6 +7,7 @@
 #include "webcam/Tile_Message.h"
 #include "webcam/Webcam_Message.h"
 #include <sensor_msgs/image_encodings.h>
+#include <std_msgs/Bool.h>
 #include "cv_bridge/cv_bridge.h"
 #include <ros/ros.h>
 
@@ -103,12 +104,30 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "webcam");
 
 
+
     /**
      * NodeHandle is the main access point to communications with the ROS system.
      * The first NodeHandle constructed will fully initialize this node, and the last
      * NodeHandle destructed will close down the node.
      */
     ros::NodeHandle n;
+    while(!ros::ok())
+    {
+
+    }
+    ros::spinOnce();
+
+    ros::Publisher initPublisher = n.advertise<std_msgs::Bool>("/Tesseron/init", 10);
+
+    ros::Rate rate(1);
+    ros::spinOnce();
+    rate.sleep();
+
+    std_msgs::Bool msg;
+    msg.data = (unsigned char) true;
+    initPublisher.publish(msg);
+    ros::spinOnce();
+
 
     /**
      * The subscribe() call is how you tell ROS that you want to receive messages
@@ -128,6 +147,8 @@ int main(int argc, char **argv) {
 //    webcam_pub = n.advertise("/Tesseron/webcam", 1000);
 
     ros::Subscriber sub = n.subscribe("/usb_cam/image_raw", 1, chatterCallback);
+
+    ROS_INFO("Booted");
 
     /**
      * ros::spin() will enter a loop, pumping callbacks.  With this version, all

@@ -10,7 +10,7 @@
 
 
 const double oneRotation = 2 * M_PI;
-
+bool updatePos = true;
 
 void DynamixelMotor::loop()
 {
@@ -105,7 +105,7 @@ void DynamixelMotor::runIntoLimit()
 
 void DynamixelMotor::updateSpeed()
 {
-    if(startPosition == 0.0){
+    if(startPosition == 0.0 | !updatePos){
         return;
     }
     double fullLastPosition = oneRotation * rotations + lastPosition -startPosition;
@@ -147,6 +147,7 @@ void DynamixelMotor::setSpeed(double d)
     std_msgs::Float64 mes;
     mes.data = d;
     MX_Pub.publish(mes);
+    //updatePos = false;
 
 }
 

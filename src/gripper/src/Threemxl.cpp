@@ -10,6 +10,8 @@
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
 #include "Threemxl.h"
 
+int threemxl_mode = 42;
+
 void Threemxl::initialise() {
     ros::Rate init_rate(1);
 
@@ -39,10 +41,18 @@ void Threemxl::initialise() {
         init_rate.sleep();
     }
 
+    intialiseExternal();
+
+    ROS_INFO("Threemxl initialised");
+
+}
+
+void Threemxl::intialiseExternal()
+{
     DXL_SAFE_CALL(spindle->set3MxlMode(EXTERNAL_INIT));
     DXL_SAFE_CALL(spindle->setAcceleration(2));
     DXL_SAFE_CALL(spindle->setSpeed(8));
-    DXL_SAFE_CALL(spindle->setTorque(3));
+    DXL_SAFE_CALL(spindle->setTorque(5));
 
     ros::Rate first_sleep(1.0/2.0);
     first_sleep.sleep();
@@ -75,25 +85,22 @@ void Threemxl::initialise() {
         }
         else
         {
-            ROS_INFO("Waiting for dynamixel to initialize");
+            ROS_INFO("Waiting for threemxl to initialize");
             prev = pspeed;
         }
         loop_rate.sleep();
-
     }
-
-    ROS_INFO("Threemxl initialised");
-
 }
 
 void Threemxl::move(double m) {
 
     int state = spindle->getState();
-
-
     startPos = spindle->presentPos();
 
-    spindle->set3MxlMode(POSITION_MODE);
+    if(spindle->present3MxlMode() != POSITION_MODE)
+    {
+        spindle->set3MxlMode(POSITION_MODE);
+    }
 
     double speed = (m / 0.004) * 2 * M_PI;
 
@@ -108,13 +115,16 @@ void Threemxl::move(double m) {
 void Threemxl::setSpeed(double speed)
 {
     spindle->getState();
-    spindle->set3MxlMode(SPEED_MODE);
+    if(spindle->present3MxlMode() != SPEED_MODE)
+    {
+        spindle->set3MxlMode(SPEED_MODE);
+    }
     spindle->setSpeed(speed);
 }
 
 void Threemxl::loop()
 {
-    spindle->getState();
+    spindle->getLinearPos();
 }
 
 void Threemxl::stop() {

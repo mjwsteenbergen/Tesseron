@@ -7,7 +7,6 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include "Tile.h"
 
 using namespace std;
 
@@ -16,9 +15,9 @@ const int MOSAIC_SIZE = 4;
 class ImageReader {
 public:
 
-    void ConvertToColor(int imageData[MOSAIC_SIZE][MOSAIC_SIZE], TileColor color[MOSAIC_SIZE][MOSAIC_SIZE]);
-    void GetImage(std::string path, TileColor imageColors[MOSAIC_SIZE][MOSAIC_SIZE]);
-    void ReadImage(std::string path, int imageData[MOSAIC_SIZE][MOSAIC_SIZE]);
+    void ConvertToColor(char imageData[MOSAIC_SIZE][MOSAIC_SIZE], char color[MOSAIC_SIZE][MOSAIC_SIZE]);
+    void GetImage(std::string path, char imageColors[MOSAIC_SIZE][MOSAIC_SIZE]);
+    void ReadImage(std::string path, char imageData[MOSAIC_SIZE][MOSAIC_SIZE]);
 
 };
 

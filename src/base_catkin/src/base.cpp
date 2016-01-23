@@ -13,14 +13,47 @@
 #include <base_catkin/base.h>
 #include <sensor_msgs/Joy.h>
 #include "base_catkin/Wheel.h"
+#include <std_msgs/Bool.h>
 
 #define CLIP(x, l, u) ((x)<(l))?(l):((x)>(u))?(u):(x)
 
 ros::Publisher ztatuz_pub_;
 
+
 void Base::init() {
 	ROS_INFO("Initializing base");
 
+
+	initBase();
+
+
+	// Subscriptions to command topic
+	// code here!
+	vel_sub_ = nh_.subscribe("/basecontrol", 50, &Base::velocityCallback, this);
+	ztatuz_pub_ = nh_.advertise<base_catkin::BaseStatus>("/base/status", 1000);
+
+//	statusPublisher = nh_.advertise<base_catkin::StatusMessage>("Tesseron/init", 10);
+
+//	 = nh_.subscribe("/test",1,&Base::testcb,this);
+
+	// Publish status
+	// code here!
+
+
+
+	wheelClient = nh_.advertiseService("/base/Wheels", &Base::drive, this);
+	initPublisher = nh_.advertise<std_msgs::Bool>("/Tesseron/init", 10);
+
+	sendInitMessage();
+
+	ROS_INFO("Base initialized");
+	//left_motor_->set3MxlMode(SPEED_MODE);
+
+	initService();
+}
+
+void Base::initBase()
+{
 	// Read parameters
 	std::string motor_port_name, motor_config_name;
 
@@ -28,17 +61,6 @@ void Base::init() {
 	ROS_ASSERT(nh_.getParam("motor_config", motor_config_name));
 	ROS_ASSERT(nh_.getParam("wheel_diameter", wheel_diameter_));
 	ROS_ASSERT(nh_.getParam("wheel_base", wheel_base_));
-
-
-
-	// Subscriptions to command topic
-	// code here!
-	vel_sub_ = nh_.subscribe("/basecontrol", 50, &Base::velocityCallback, this);
-	ztatuz_pub_ = nh_.advertise<base_catkin::BaseStatus>("/base/status", 1000);
-//	 = nh_.subscribe("/test",1,&Base::testcb,this);
-
-	// Publish status
-	// code here!
 
 	// Load motor configuration
 	CXMLConfiguration motor_config_xml;
@@ -79,28 +101,36 @@ void Base::init() {
 	left_motor_->set3MxlMode(SPEED_MODE);
 
 	mode_pos_ = false;
+}
 
-	ROS_INFO("Base initialized");
-	//left_motor_->set3MxlMode(SPEED_MODE);
-
-	initService();
+void Base::sendInitMessage()
+{
+    ros::Rate rate(1);
+    ros::spinOnce();
+    rate.sleep();
+	std_msgs::Bool msg;
+	msg.data = (unsigned char) true;
+	initPublisher.publish(msg);
+	ros::spin();
 }
 
 void Base::initService() {
     //ros::ServiceServer service = nh_.advertiseService("add_two_ints", drive);
 }
 
-void Base::drive(base_catkin::Wheel::Request request, base_catkin::Wheel::Response response){
-	std::string error = drive(request.distance);
+bool Base::drive(base_catkin::Wheel::Request &req, base_catkin::Wheel::Response &res){
+	ROS_INFO("AA: DRIVE RECIEVED");
+	return true;
+	std::string error = drive(req.distance);
 	if(error != "")
 	{
-		response.succeeded =false;
-		response.error = error;
+		res.succeeded =false;
+		res.error = error;
 	}
 	else
 	{
-		response.succeeded = true;
-		response.error = "";
+		res.succeeded = true;
+		res.error = "";
 	}
 }
 
@@ -150,8 +180,7 @@ void Base::spin() {
  */
 
 void Base::velocityCallback(const geometry_msgs::Twist::ConstPtr &msg) {
-
-		ROS_INFO("Message recieved %f", msg->linear.x);
+    ROS_INFO("Message recieved %f", msg->linear.x);
 	left_motor_->setSpeed(msg->linear.x);
 	right_motor_->setSpeed(msg->linear.y);
 //		left_motor_->setLinearSpeed(msg->linear.y + msg->angular.z);
@@ -190,7 +219,7 @@ int main(int argc, char **argv)
 
 	ros::init(argc, argv, "base");
 	Base base;
-	base.spin();
+	//base.spin();
 
 	return 0;
 }

@@ -1,0 +1,8 @@
+#!/bin/bash
+# My first script
+
+cd /opt/ros/indigo/
+source setup.bash
+cd /home/newnottakenname/Coding/Tesseron/devel/
+source setup.bash
+roslaunch gripper gripper.launch

@@ -26,7 +26,7 @@ protected:
     ros::ServiceServer PickUpClient;
     ros::ServiceServer MoveClient;
 
-    ros::Publisher statusPublisher;
+    ros::Publisher initPublisher;
 
     ros::Subscriber speedTopic;
 
@@ -68,7 +68,7 @@ public:
 
     void setSpeed(double speedMX, double speedSpindle, double speedRX);
 
-    void initialise();
+    bool initialise();
 };
 
 

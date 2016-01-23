@@ -23,6 +23,8 @@ public:
     void loop();
 
     void stop();
+
+    void intialiseExternal();
 };
 
 
