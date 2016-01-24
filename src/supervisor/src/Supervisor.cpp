@@ -21,9 +21,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "supervisor");
     Supervisor sups;
 
-    //sups.toManualControl();
+    sups.toManualControl();
 
-    sups.toAutomaticControl();
+//    sups.toAutomaticControl();
 //    sups.layFloor();
 //    sups.getTile('B');
 }
@@ -276,7 +276,7 @@ void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     if(joy->axes[23] != 0.0 | joy->axes[24] != 0.0 | joy->axes[25] != 0.0 )
     {
-        return;
+        //return;
     }
     if(joy->buttons[PS3_BUTTON_START] > 0.001)
     {

@@ -60,32 +60,58 @@ void Gripper::init()
 
 
 bool Gripper::initialise() {
+    RX.setMotorName("/tilt_controller/", 15E-3);
+    RX.initCompleted();
+    handlePickup(true);
 //    MX.setMotorName("/pan_controller/", 3E-02);
 //    MX.runIntoLimit();
-//    RX.setMinus(2.62);
-//    RX.setMotorName("/tilt_controller/", 16E-3);
-//    RX.initCompleted();
-    spindle.initialise();
+
+//    spindle.initialise();
+//    spindle.intialiseExternal();
 
     initialised = true;
-
-    ROS_INFO("Dynamixel initialised");
 }
 
 bool Gripper::handleLayDown(gripper::LayDown::Request &req, gripper::LayDown::Response &res)
 {
     //TODO
 
+
+
     res.succeeded = (unsigned char) false;
     return true;
 }
 
+void Gripper::handleLayDown(bool fully) {
+    if(fully)
+    {
+        RX.gotoPosition(0.0);
+    }
+    else{
+        //TODO
+    }
+}
+
+
 bool Gripper::handlePickUp(gripper::PickUp::Request &req, gripper::PickUp::Response &res)
 {
-    //TODO
+    handlePickup(req.fully);
 
     res.succeeded = (unsigned char) false;
     return true;
+}
+
+
+void Gripper::handlePickup(bool fully) {
+    if(fully)
+    {
+//        RX.gotoPosition(0.125);
+        RX.gotoPosition(0.10);
+    }
+    else
+    {
+        //TODO
+    }
 }
 
 bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGripper::Response &res)
@@ -97,6 +123,13 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
 
 
     return true;
+}
+
+void Gripper::loopOnce(){
+    //
+
+
+
 }
 
 
@@ -127,12 +160,9 @@ void Gripper::loop()
 {
     ros::Rate loop_rate(1000);
     while(ros::ok()){
-//
-
-
 //        MX.loopOnce();
-//        RX.loopOnce();
-        spindle.loop();
+        RX.loopOnce();
+//        spindle.loop();
 
         //double d = (2*M_PI + 0.4*M_PI);
         //int i = (int) d;
@@ -175,15 +205,19 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Gripper");
     Gripper grip;
 //    grip.MX.gotoPosition(0.2);
-    grip.spindle.move(-0.05);
+//    grip.spindle.move(-0.15);
+
     grip.loop();
-    gripper::MoveGripperRequest req;
+//    gripper::MoveGripperRequest req;
 
 }
 
 void Gripper::TwistCallback(const geometry_msgs::Twist::ConstPtr &msg) {
     if(initialised)
     {
+        RX.setManualControl(true);
+        MX.setManualControl(true);
+        spindle.setManualControl(true);
         setSpeed(msg->linear.x, msg->linear.y * 5, msg->angular.z);
     }
 }

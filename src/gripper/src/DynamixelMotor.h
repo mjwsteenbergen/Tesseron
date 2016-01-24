@@ -20,11 +20,15 @@ private:
 
     int rotations;
 
+    bool completed;
+
+    double oneRotation = 2 * M_PI;
     double lastPosition;
     double wantedPosition;
     double startPosition;
     double radius;
     double speedModifier = 5;
+    bool manualControl = false;
     double minus;
 
 public:
@@ -54,6 +58,12 @@ public:
     void setMultiplier(double d);
 
     void setMinus(double d);
+
+    void setManualControl(bool on);
+
+    void setOneRotation(double rad);
+
+    bool hasCompleted();
 };
 
 

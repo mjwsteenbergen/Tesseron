@@ -9,8 +9,6 @@
 #include <std_msgs/Float64.h>
 
 
-const double oneRotation = 2 * M_PI;
-bool updatePos = true;
 
 void DynamixelMotor::loop()
 {
@@ -103,33 +101,16 @@ void DynamixelMotor::runIntoLimit()
     initCompleted();
 }
 
-void DynamixelMotor::updateSpeed()
+void DynamixelMotor::setManualControl(bool on)
 {
-    if(startPosition == 0.0 | !updatePos){
-        return;
-    }
-    double fullLastPosition = oneRotation * rotations + lastPosition -startPosition;
-
-    double changeInPosition = (wantedPosition/radius) - fullLastPosition;
-
-    if(fabs(changeInPosition) < 0.01 )
-    {
-        setSpeed(0);
-    }
-    else
-    {
-        setSpeed(changeInPosition * speedModifier);
-//        ROS_INFO("CIP");
-//        ROS_INFO(std::to_string(changeInPosition).c_str());
-//        ROS_INFO("lastPos");
-        ROS_INFO(std::to_string(lastPosition).c_str());
-//        ROS_INFO("rot");
-        ROS_INFO(std::to_string(rotations).c_str());
-    }
-
-
-
+    manualControl = on;
 }
+
+bool DynamixelMotor::hasCompleted()
+{
+    return completed;
+}
+
 
 void DynamixelMotor::loopOnce()
 {
@@ -147,18 +128,18 @@ void DynamixelMotor::setSpeed(double d)
     std_msgs::Float64 mes;
     mes.data = d;
     MX_Pub.publish(mes);
-    //updatePos = false;
+    //manualControl = false;
 
 }
 
-void DynamixelMotor::setMinus(double d)
+void DynamixelMotor::setOneRotation(double rad)
 {
-    minus = d;
-
+    oneRotation = rad;
 }
 
 void DynamixelMotor::gotoPosition(double position)
 {
+    completed = false;
     wantedPosition = position;
 }
 
@@ -187,4 +168,37 @@ void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr
     if(fabs(startPosition) > 1E-31) {
         updateSpeed();
     }
+}
+
+void DynamixelMotor::updateSpeed()
+{
+    if(startPosition == 0.0 | manualControl){
+        return;
+    }
+    double fullLastPosition = oneRotation * rotations + lastPosition - startPosition;
+
+    double changeInPosition = (wantedPosition/radius) - fullLastPosition;
+
+    if(fabs(changeInPosition) < 0.01 )
+    {
+        setSpeed(0);
+        completed = true;
+    }
+    else
+    {
+        setSpeed(changeInPosition * speedModifier);
+//        ROS_INFO("CIP");
+//        ROS_INFO(std::to_string(changeInPosition).c_str());
+//        ROS_INFO("lastPos");
+        std::string info = "LastPostition: ";
+        info.append(std::to_string(lastPosition));
+        info.append("\t Wanted: ");
+        info.append(std::to_string(wantedPosition));
+        info.append("\t Rotations: ");
+        info.append(std::to_string(rotations));
+        ROS_INFO(info.c_str());
+    }
+
+
+
 }

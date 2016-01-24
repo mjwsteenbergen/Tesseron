@@ -69,6 +69,12 @@ public:
     void setSpeed(double speedMX, double speedSpindle, double speedRX);
 
     bool initialise();
+
+    void handlePickup(bool fully);
+
+    void handleLayDown(bool fully);
+
+    void loopOnce();
 };
 
 
