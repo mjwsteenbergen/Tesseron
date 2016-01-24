@@ -10,7 +10,9 @@
 #include "threemxl/platform/io/configuration/XMLConfiguration.h"
 #include "Threemxl.h"
 
-int threemxl_mode = 42;
+
+
+double speedModifier = 10.0;
 
 void Threemxl::initialise() {
     ros::Rate init_rate(1);
@@ -41,7 +43,18 @@ void Threemxl::initialise() {
         init_rate.sleep();
     }
 
-    intialiseExternal();
+//    intialiseExternal();
+
+    while(true)
+    {
+        init_rate.sleep();
+        double init = spindle->presentPos();
+        //if(init != 0.0){
+            gotoPos = spindle->presentPos();
+            startPos = spindle->presentPos();
+            break;
+        //}
+    }
 
     ROS_INFO("Threemxl initialised");
 
@@ -71,11 +84,11 @@ void Threemxl::intialiseExternal()
         double ls2 = spindle->getPos();
 
 //        if (pstat == M3XL_STATUS_INIT_DONE ||  pspeed == 0)
-//        {
-        if(prev == pspeed && pspeed != 0)
+//        {//(prev == pspeed && pspeed != 0)
+        if(pstat == M3XL_STATUS_INIT_DONE )
 //            if(stopped == 10)
         {
-            int i2q23 = 0;
+//            int i2q23 = 0;
             break;
 //            }
 //            else{
@@ -85,29 +98,39 @@ void Threemxl::intialiseExternal()
         }
         else
         {
+            ROS_FATAL_STREAM("Couldn't initialize arm: " << spindle->translateErrorCode(pstat2));
             ROS_INFO("Waiting for threemxl to initialize");
             prev = pspeed;
         }
         loop_rate.sleep();
     }
+
+    DXL_SAFE_CALL(spindle->set3MxlMode(SPEED_MODE));
+}
+
+void Threemxl::setManualControl(bool on)
+{
+    manualControl = on;
 }
 
 void Threemxl::move(double m) {
 
-    int state = spindle->getState();
-    startPos = spindle->presentPos();
+//    int state = spindle->getState();
+//
+//
+//    startPos = spindle->presentPos();
+//
+//    spindle->set3MxlMode(POSITION_MODE);
+//
+    //- 0.0014
+    double distance = (m / (0.004 )) * 2 * M_PI + startPos;
+//
+//    //
+//    spindle->setPos(distance, 8*M_PI, 32*M_PI, false);
+//
+//    double endPosRad = spindle->presentPos();
 
-    if(spindle->present3MxlMode() != POSITION_MODE)
-    {
-        spindle->set3MxlMode(POSITION_MODE);
-    }
-
-    double speed = (m / 0.004) * 2 * M_PI;
-
-    //
-    spindle->setPos(startPos + speed, 8*M_PI, 32*M_PI, false);
-
-    double endPosRad = spindle->presentPos();
+    gotoPos = distance;
 
 
 }
@@ -119,12 +142,90 @@ void Threemxl::setSpeed(double speed)
     {
         spindle->set3MxlMode(SPEED_MODE);
     }
-    spindle->setSpeed(speed);
+    spindle->setSpeed(speed, false);
 }
+
+bool speeding = false;
 
 void Threemxl::loop()
 {
-    spindle->getLinearPos();
+    spindle->getState();
+    if(manualControl)
+    {
+        return;
+    }
+    double measured = spindle->presentPos();
+
+    if(measured == 0.0)
+    {
+        return;
+    }
+    double delta = measured - previous;
+    if(fabs(delta) > 40.0)
+    {
+        if(delta < 0)
+        {
+            rotations++;
+        }
+        else
+        {
+            rotations--;
+        }
+    }
+    double current_pos = measured + oneRotation * rotations + startPos;
+
+    double speed = current_pos - gotoPos;
+
+    spindle->setAcceleration(5, false);
+
+//    double pp = spindle->presentPos();
+    if(spindle->present3MxlMode() != SPEED_MODE)
+    {
+        spindle->set3MxlMode(SPEED_MODE);
+    }
+    if(fabs(speed) > 0.1)
+    {
+        if(speed > 10) //TODO CHECK ME
+        {
+            spindle->setSpeed(-10, false);
+        }
+        else
+        {
+            if(speed < -10)
+            {
+                spindle->setSpeed(10);
+            }
+            else{
+                spindle->setSpeed(-speed/2.0, false);
+            }
+        }
+        speeding = true;
+
+        std::string info = std::to_string(current_pos);
+        info.append("\tGT:");
+        info.append(std::to_string(gotoPos));
+        info.append("\tRS:");
+        info.append(std::to_string(speed));
+        info.append("\tRS:");
+        info.append(std::to_string(spindle->presentSpeed()));
+        info.append("\tRT:");
+        info.append(std::to_string(rotations));
+        ROS_INFO(info.c_str());
+        //}
+    }
+    else
+    {
+        spindle->setSpeed(0, false);
+        speeding = false;
+    }
+
+    previous = measured;
+//    spindle->setSpeed(speed / speedModifier, false);
+
+
+//    ros::Rate sleep(2);
+//    sleep.sleep();
+
 }
 
 void Threemxl::stop() {
