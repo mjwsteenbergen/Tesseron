@@ -19,11 +19,16 @@ private:
     void init();
 
     int rotations;
+    int id;
 
     bool completed;
+    bool initiased = false;
 
     double oneRotation = 2 * M_PI;
-    double lastPosition;
+
+    double lastPosition = -100;
+    double currentPosition;
+
     double wantedPosition;
     double startPosition;
     double radius;
@@ -49,7 +54,7 @@ public:
 
     void loopOnce();
 
-    void setMotorName(std::string name, double radius);
+    void setMotorName(std::string name, double radius, int i);
 
     void runIntoLimit();
 
@@ -57,13 +62,13 @@ public:
 
     void setMultiplier(double d);
 
-    void setMinus(double d);
-
     void setManualControl(bool on);
 
     void setOneRotation(double rad);
 
     bool hasCompleted();
+
+    void limitCheck();
 };
 
 

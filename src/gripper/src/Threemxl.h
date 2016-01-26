@@ -18,22 +18,30 @@ protected:
     double previous = 0;
     double rotations = 0;
     double oneRotation = 64.0;
+    double prev = 0.0;
     bool manualControl = false;
+    bool initialised = false;
+    bool completed;
 
 public:
     void setSpeed(double speed);
 
     void initialise();
 
-    void move(double m);
+    void gotoPosition(double m);
 
-    void loop();
+    void loopOnce();
 
     void stop();
 
     void intialiseExternal();
 
     void setManualControl(bool on);
+
+    bool isInitialised();
+
+
+    bool hasCompleted();
 };
 
 

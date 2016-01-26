@@ -20,6 +20,7 @@
 class Gripper {
 
 protected:
+
     ros::NodeHandle nh_;
 
     ros::ServiceServer LaydownClient;
@@ -75,6 +76,16 @@ public:
     void handleLayDown(bool fully);
 
     void loopOnce();
+
+    void moveToShutdown();
+
+    void BlockingRX(double distance);
+
+    void BlockingMX(double distance);
+
+    void BlockingSpindle(double distance);
+
+    bool handleMove(double spindlePos, double MXPos);
 };
 
 

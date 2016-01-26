@@ -21,11 +21,33 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "supervisor");
     Supervisor sups;
 
-    sups.toManualControl();
+//    sups.toManualControl();
 
-//    sups.toAutomaticControl();
-//    sups.layFloor();
+    sups.toAutomaticControl();
+    sups.layFloor();
+//    sups.getTile('D');
+//    sups.getTile('A');
+//    sups.getTile('C');
 //    sups.getTile('B');
+//    sups.pickupTile(false);
+
+    ros::Rate sleep(0.3);
+    sleep.sleep();
+//
+//    sups.pickupTile(true);
+//    sups.moveTo(-0.11, 0.173);
+
+    //Move to laydown
+//    sups.moveTo(-0.03, 0.15);
+//    sups.layTile(false);
+
+//    ros::Rate sleep2(0.3);
+//    sleep2.sleep();
+//    sups.pickupTile(true);
+
+    //Move to shutdown
+    sups.moveTo(-0.03, 0.05);
+    sups.layTile(true);
 }
 
 void Supervisor::toManualControl() {
@@ -131,17 +153,26 @@ void Supervisor::layFloor() {
     char image[MOSAIC_SIZE][MOSAIC_SIZE];
     getInstructions(image);
 
-    for(int i = 0; i < MOSAIC_SIZE; i++)
-    {
+//    for(int i = 0; i < MOSAIC_SIZE; i++)
+//    {
         //TODO add webcam
         for(int j = 0; j < MOSAIC_SIZE; j++)
         {
-            getTile(image[i][j]);
-            moveTo(i,j);
-            dropTile(true);
+            getTile(image[0][j]);
+            getGlue();
+            moveTo(-0.03, 0.10 + j*0.025);
+            layTile(false);
+//            ros::Rate sleep(0.3);
+//            sleep.sleep();
+            readyNextTile('-');
+
+            ros::Rate sleep(0.66);
+            sleep.sleep();
+
+            pickupTile(true);
         }
-        moveBack(3);
-    }
+//        moveBack(3);
+//    }
 }
 
 void Supervisor::moveBack(int distance) {
@@ -162,7 +193,11 @@ void Supervisor::moveBack(int distance) {
 
 }
 
-void Supervisor::moveTo(int x, int y) {
+/**
+ * x - spindle
+ * y - MX
+ */
+void Supervisor::moveTo(double x, double y) {
     supervisor::MoveGripper srv;
     srv.request.x = x;
     srv.request.y = y;
@@ -179,8 +214,9 @@ void Supervisor::moveTo(int x, int y) {
     }
 }
 
-void Supervisor::dropTile(bool b) {
+void Supervisor::layTile(bool b) {
     supervisor::LayDown srv;
+    srv.request.fully = (unsigned char) b;
     if (layDownService.call(srv))
     {
         if(!srv.response.succeeded)
@@ -194,26 +230,23 @@ void Supervisor::dropTile(bool b) {
     }
 }
 
-void Supervisor::getTile(char color) {
+void Supervisor::moveToTilePosition(char color) {
 
-    int defaultx = 0;
-    int defaulty = 0;
     if(color == 'A')
     {
-        int i = 0;
-        //moveTo(defaultx, defaulty);
+        moveTo(-0.16, 0.13);
     }
     else if(color == 'B')
     {
-        int i = 1;
+        moveTo(-0.16, 0.17);
     }
     else if(color == 'C')
     {
-        int i = 2;
+        moveTo(-0.16, 0.333);
     }
     else if(color == 'D')
     {
-        int i = 3;
+        moveTo(-0.16, 0.372);
     }
     else {
         ROS_ERROR("There is no color like this. Please check color spectrum");
@@ -225,10 +258,56 @@ void Supervisor::getTile(char color) {
 
 }
 
+void Supervisor::moveBackFrom(char color)
+{
+    if(color == 'A')
+    {
+        moveTo(-0.11, 0.13);
+    }
+    else if(color == 'B')
+    {
+        moveTo(-0.11, 0.17);
+    }
+    else if(color == 'C')
+    {
+        moveTo(-0.11, 0.333);
+    }
+    else if(color == 'D')
+    {
+        moveTo(-0.11, 0.372);
+    }
+    else {
+        ROS_ERROR("There is no color like this. Please check color spectrum");
+    }
+
+}
+
+void Supervisor::getGlue()
+{
+//    5.84
+    //8.02
+    moveTo(-0.16, 0.17 + 0.0802);
+}
+
+void Supervisor::getTile(char i) {
+    moveToTilePosition(i);
+    pickupTile(false);
+    //ros::Rate sleep(0.3);
+    //sleep.sleep();
+    readyNextTile('+');
+
+    ros::Rate sleep(0.66);
+    sleep.sleep();
+
+    pickupTile(true);
+    //moveBackFrom(i);
+    readyNextTile(i);
+}
+
 void Supervisor::pickupTile(bool fully) {
     supervisor::PickUp srv;
     srv.request.fully = (unsigned char) fully;
-    if (layDownService.call(srv))
+    if (pickUpService.call(srv))
     {
         if(!srv.response.succeeded)
         {
@@ -241,10 +320,10 @@ void Supervisor::pickupTile(bool fully) {
     }
 }
 
-void Supervisor::readyNextTile(char color) {
-    if(color == 'A' || color == 'B' || color == 'C' ||color == 'D'){
+void Supervisor::readyNextTile(char colour) {
+    if(colour == 'A' || colour == 'B' || colour == 'C' || colour == 'D' || colour == '+' || colour == '-'){
         std_msgs::Char msg;
-        msg.data = (unsigned char) color;
+        msg.data = (unsigned char) colour;
         tile_pusherService.publish(msg);
     }
     else
@@ -314,5 +393,6 @@ void Supervisor::joystickFeedback(const sensor_msgs::Joy::ConstPtr& joy)
 
     manualControl(baseL + base, baseR + base, spindle, up - down, dynaBar);
 }
+
 
 

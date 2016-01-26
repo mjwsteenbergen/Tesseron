@@ -15,7 +15,7 @@ class Supervisor {
 protected:
 
     ros::NodeHandle nh_;
-    const static int numberOfNodes = 3;
+    const static int numberOfNodes = 1;
     int numberOfBootedNodes;
 
     ros::Subscriber joy_subscriber;
@@ -41,17 +41,17 @@ public:
 
     void layFloor();
 
-    void moveTo(int x, int y);
+    void moveTo(double x, double y);
 
     void moveBack(int distance);
 
-    void dropTile(bool fully);
+    void layTile(bool fully);
 
-    void getTile(char color);
+    void moveToTilePosition(char color);
 
     void pickupTile(bool fully);
 
-    void readyNextTile(char color);
+    void readyNextTile(char colour);
 
     void getInstructions(char image[MOSAIC_SIZE][MOSAIC_SIZE]);
 
@@ -69,6 +69,12 @@ public:
     void toManualControl();
 
     void toAutomaticControl();
+
+    void moveBackFrom(char color);
+
+    void getTile(char i);
+
+    void getGlue();
 };
 
 

@@ -34,10 +34,10 @@ struct MoveGripperRequest_
 
 
 
-   typedef float _x_type;
+   typedef double _x_type;
   _x_type x;
 
-   typedef float _y_type;
+   typedef double _y_type;
   _y_type y;
 
 
@@ -74,7 +74,7 @@ namespace message_traits
 
 
 // BOOLTRAITS {'IsFixedSize': True, 'IsMessage': True, 'HasHeader': False}
-// {'std_msgs': ['/opt/ros/indigo/share/std_msgs/cmake/../msg'], 'gripper': ['/home/sanderkempen/Coding/Tesseron/src/gripper/msg']}
+// {'std_msgs': ['/opt/ros/indigo/share/std_msgs/cmake/../msg'], 'gripper': ['/home/newnottakenname/Coding/Tesseron/src/gripper/msg']}
 
 // !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__format__', '__getattribute__', '__hash__', '__init__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
 
@@ -117,12 +117,12 @@ struct MD5Sum< ::gripper::MoveGripperRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "ff8d7d66dd3e4b731ef14a45d38888b6";
+    return "209f516d3eb691f0663e25cb750d67c1";
   }
 
   static const char* value(const ::gripper::MoveGripperRequest_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xff8d7d66dd3e4b73ULL;
-  static const uint64_t static_value2 = 0x1ef14a45d38888b6ULL;
+  static const uint64_t static_value1 = 0x209f516d3eb691f0ULL;
+  static const uint64_t static_value2 = 0x663e25cb750d67c1ULL;
 };
 
 template<class ContainerAllocator>
@@ -141,8 +141,8 @@ struct Definition< ::gripper::MoveGripperRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "float32 x\n\
-float32 y\n\
+    return "float64 x\n\
+float64 y\n\
 ";
   }
 
@@ -182,9 +182,9 @@ struct Printer< ::gripper::MoveGripperRequest_<ContainerAllocator> >
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::gripper::MoveGripperRequest_<ContainerAllocator>& v)
   {
     s << indent << "x: ";
-    Printer<float>::stream(s, indent + "  ", v.x);
+    Printer<double>::stream(s, indent + "  ", v.x);
     s << indent << "y: ";
-    Printer<float>::stream(s, indent + "  ", v.y);
+    Printer<double>::stream(s, indent + "  ", v.y);
   }
 };
 

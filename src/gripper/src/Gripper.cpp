@@ -60,35 +60,95 @@ void Gripper::init()
 
 
 bool Gripper::initialise() {
-    RX.setMotorName("/tilt_controller/", 15E-3);
+    RX.setMotorName("/tilt_controller/", 15E-3, 1);
     RX.initCompleted();
     handlePickup(true);
-//    MX.setMotorName("/pan_controller/", 3E-02);
-//    MX.runIntoLimit();
 
-//    spindle.initialise();
-//    spindle.intialiseExternal();
+    ros::Rate sleep(5);
+    for (int i = 0; i < 10; ++i) {
+        sleep.sleep();
+        loopOnce();
+        while(!RX.hasCompleted())
+        {
+            loopOnce();
+        }
+    }
+
+    MX.setMotorName("/pan_controller/", 3E-02, 2);
+    MX.runIntoLimit();
+
+    while(!MX.hasCompleted())
+    {
+        loopOnce();
+    }
+    for (int i = 0; i < 10; ++i) {
+        sleep.sleep();
+        loopOnce();
+        while(!RX.hasCompleted() | !MX.hasCompleted())
+        {
+            loopOnce();
+        }
+    }
+
+    spindle.initialise();
+    spindle.intialiseExternal();
+    spindle.isInitialised();
+    while(!spindle.isInitialised())
+    {
+        loopOnce();
+    }
 
     initialised = true;
+
+    return true;
+}
+
+void Gripper::BlockingRX(double distance)
+{
+    RX.gotoPosition(distance);
+    while(!RX.hasCompleted())
+    {
+        loopOnce();
+    }
+}
+
+void Gripper::BlockingMX(double distance)
+{
+    MX.gotoPosition(distance);
+    while(!MX.hasCompleted())
+    {
+        loopOnce();
+    }
+}
+
+void Gripper::BlockingSpindle(double distance)
+{
+    spindle.gotoPosition(distance);
+    while(!spindle.hasCompleted())
+    {
+        loopOnce();
+    }
 }
 
 bool Gripper::handleLayDown(gripper::LayDown::Request &req, gripper::LayDown::Response &res)
 {
     //TODO
 
-
+    handleLayDown(req.fully);
 
     res.succeeded = (unsigned char) false;
     return true;
 }
 
+
+
 void Gripper::handleLayDown(bool fully) {
     if(fully)
     {
-        RX.gotoPosition(0.0);
+        BlockingRX(0.00);
     }
     else{
-        //TODO
+        BlockingRX(0.003);
     }
 }
 
@@ -97,7 +157,7 @@ bool Gripper::handlePickUp(gripper::PickUp::Request &req, gripper::PickUp::Respo
 {
     handlePickup(req.fully);
 
-    res.succeeded = (unsigned char) false;
+    res.succeeded = (unsigned char) true;
     return true;
 }
 
@@ -105,12 +165,11 @@ bool Gripper::handlePickUp(gripper::PickUp::Request &req, gripper::PickUp::Respo
 void Gripper::handlePickup(bool fully) {
     if(fully)
     {
-//        RX.gotoPosition(0.125);
-        RX.gotoPosition(0.10);
+        BlockingRX(0.124);
     }
     else
     {
-        //TODO
+        BlockingRX(0.119);
     }
 }
 
@@ -118,18 +177,30 @@ bool Gripper::handleMove(gripper::MoveGripper::Request &req, gripper::MoveGrippe
 {
     res.succeeded = (unsigned char) true;
 
-    spindle.move(req.y);
-    MX.gotoPosition(req.x);
+    handleMove(req.x, req.y);
 
 
     return true;
 }
 
+bool Gripper::handleMove(double spindlePos, double MXPos)
+{
+    spindle.gotoPosition(spindlePos);
+    MX.gotoPosition(MXPos);
+
+    while(!spindle.hasCompleted() || !MX.hasCompleted())
+    {
+        loopOnce();
+    }
+
+}
+
 void Gripper::loopOnce(){
-    //
+    MX.loopOnce();
+    RX.loopOnce();
+    spindle.loopOnce();
 
-
-
+    ros::spinOnce();
 }
 
 
@@ -156,44 +227,26 @@ void Gripper::setSpeed(double speedMX, double speedSpindle, double speedRX)
     MX.setSpeed(speedRX);
 }
 
+void Gripper::moveToShutdown(){
+    spindle.gotoPosition(-0.03);
+    while(!spindle.hasCompleted()){
+        loopOnce();
+    }
+    MX.gotoPosition(0.05);
+    while(!MX.hasCompleted())
+    {
+        loopOnce();
+    }
+    RX.gotoPosition(0.001);
+    while(!RX.hasCompleted()){
+        loopOnce();
+    }
+}
+
 void Gripper::loop()
 {
-    ros::Rate loop_rate(1000);
     while(ros::ok()){
-//        MX.loopOnce();
-        RX.loopOnce();
-//        spindle.loop();
-
-        //double d = (2*M_PI + 0.4*M_PI);
-        //int i = (int) d;
-
-        //std::this_thread::sleep_for(std::chrono::microseconds(1));
-
-//        ros::Rate waitTime(0.5);
-//        waitTime.sleep();
-//
-        loop_rate.sleep();
-//
-//        mes.data = 0;
-//
-//        MX_Pub.publish(mes);
-//
-//        loop_rate.sleep();
-//        loop_rate.sleep();
-//        loop_rate.sleep();
-
-
-//        int i = __cplusplus;
-
-        //double posd = spindle->presentPos();
-        //int pos = spindle->getLinearPos();
-
-
-        //std::string s= std::to_string(spindle->getPos());
-//        ROS_INFO();
-
-        ros::spinOnce();
-
+        loopOnce();
     }
 
     //STOP();
@@ -205,8 +258,16 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Gripper");
     Gripper grip;
 //    grip.MX.gotoPosition(0.2);
-//    grip.spindle.move(-0.15);
+//    grip.handleLayDown(true);
+//    grip.handleMove(-0.16,0.13);
+//    grip.BlockingRX(0.119);
 
+
+//    ros::Rate sleep(0.1);
+//    sleep.sleep();
+
+//    grip.handlePickup(true);
+//    grip.moveToShutdown();
     grip.loop();
 //    gripper::MoveGripperRequest req;
 

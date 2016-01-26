@@ -41,13 +41,14 @@ void DynamixelMotor::loop()
 void DynamixelMotor::init()
 {
     wantedPosition = 0;
-    lastPosition = 0;
+    currentPosition = 0;
     rotations = 0;
 
 }
 
-void DynamixelMotor::setMotorName(std::string name, double rad)
+void DynamixelMotor::setMotorName(std::string name, double rad, int ids)
 {
+    id = ids;
     radius = rad;
     MX_Sub = nh_.subscribe(name + "state", 50, &DynamixelMotor::positionCallback, this);
     MX_Pub = nh_.advertise<std_msgs::Float64>(name + "command", 1000);
@@ -77,28 +78,35 @@ void DynamixelMotor::setMotorName(std::string name, double rad)
 
 void DynamixelMotor::initCompleted()
 {
-    int i = 0;
-    while(i < 3){
-        i++;
+    while(currentPosition == 0.0){
         ros::spinOnce();
-        ros::Rate sleep(1);
-        sleep.sleep();
-        //ROS_INFO(std::to_string(i).c_str());
     }
 
+    startPosition = currentPosition;
+    wantedPosition = startPosition;
+    rotations = 0;
+    completed = true;
+    initiased = true;
 
-    startPosition = lastPosition;
-    wantedPosition = 0;
 }
 
 void DynamixelMotor::runIntoLimit()
 {
     setSpeed(-0.7);
+    ros::Rate sleep(0.7);
+    sleep.sleep();
 
-    ros::Rate waitRate(0.1);
-    waitRate.sleep();
+//    ros::Rate waitRate(0.1);
+//    waitRate.sleep();
+}
 
-    initCompleted();
+void DynamixelMotor::limitCheck() {
+    double diff = fabs(lastPosition - currentPosition);
+    if(diff < 0.01 && currentPosition != 0.0)
+    {
+        initCompleted();
+        completed = true;
+    }
 }
 
 void DynamixelMotor::setManualControl(bool on)
@@ -114,7 +122,6 @@ bool DynamixelMotor::hasCompleted()
 
 void DynamixelMotor::loopOnce()
 {
-    ros::spinOnce();
 }
 
 void DynamixelMotor::setMultiplier(double d)
@@ -140,7 +147,7 @@ void DynamixelMotor::setOneRotation(double rad)
 void DynamixelMotor::gotoPosition(double position)
 {
     completed = false;
-    wantedPosition = position;
+    wantedPosition = (position/radius) + startPosition;
 }
 
 void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr &mes) {
@@ -151,11 +158,10 @@ void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr
         int i = 0;
     }
 
-    if(fabs(lastPosition) > 1E-31){
-        if(fabs(cur_pos - lastPosition) > 2)
+    if(fabs(currentPosition) > 1E-31){
+        if(fabs(cur_pos - currentPosition) > 2)
         {
-            setSpeed(0);
-            if((lastPosition - cur_pos) > 0){
+            if((currentPosition - cur_pos) > 0){
                 rotations++;
             }
             else
@@ -164,9 +170,14 @@ void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr
             }
         }
     }
-    lastPosition = cur_pos;
-    if(fabs(startPosition) > 1E-31) {
+    lastPosition = currentPosition;
+    currentPosition = cur_pos;
+    if(initiased) {
         updateSpeed();
+    }
+    else
+    {
+        limitCheck();
     }
 }
 
@@ -175,9 +186,9 @@ void DynamixelMotor::updateSpeed()
     if(startPosition == 0.0 | manualControl){
         return;
     }
-    double fullLastPosition = oneRotation * rotations + lastPosition - startPosition;
+    double fullLastPosition = oneRotation * rotations + currentPosition;
 
-    double changeInPosition = (wantedPosition/radius) - fullLastPosition;
+    double changeInPosition = wantedPosition - fullLastPosition;
 
     if(fabs(changeInPosition) < 0.01 )
     {
@@ -186,12 +197,13 @@ void DynamixelMotor::updateSpeed()
     }
     else
     {
+        completed = false;
         setSpeed(changeInPosition * speedModifier);
 //        ROS_INFO("CIP");
 //        ROS_INFO(std::to_string(changeInPosition).c_str());
 //        ROS_INFO("lastPos");
-        std::string info = "LastPostition: ";
-        info.append(std::to_string(lastPosition));
+        std::string info = "Postition: ";
+        info.append(std::to_string(fullLastPosition));
         info.append("\t Wanted: ");
         info.append(std::to_string(wantedPosition));
         info.append("\t Rotations: ");
@@ -202,3 +214,5 @@ void DynamixelMotor::updateSpeed()
 
 
 }
+
+

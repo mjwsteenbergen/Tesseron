@@ -40,7 +40,7 @@ template<>
 struct MD5Sum< ::gripper::MoveGripper > {
   static const char* value()
   {
-    return "e6e865a8e83cc84fa1ea3e028f496ffb";
+    return "3548dafcab16b5653ad3136b0a96898d";
   }
 
   static const char* value(const ::gripper::MoveGripper&) { return value(); }
