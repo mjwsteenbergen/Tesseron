@@ -15,7 +15,7 @@ class Supervisor {
 protected:
 
     ros::NodeHandle nh_;
-    const static int numberOfNodes = 1;
+    const static int numberOfNodes = 2;
     int numberOfBootedNodes;
 
     ros::Subscriber joy_subscriber;
@@ -25,6 +25,7 @@ protected:
     ros::ServiceClient wheelService;
     ros::ServiceClient layDownService;
     ros::ServiceClient pickUpService;
+    ros::ServiceClient glueService;
 
 
     ros::Publisher tile_pusherService;
@@ -43,7 +44,7 @@ public:
 
     void moveTo(double x, double y);
 
-    void moveBack(int distance);
+    void moveBack(float distance);
 
     void layTile(bool fully);
 
@@ -75,6 +76,8 @@ public:
     void getTile(char i);
 
     void getGlue();
+
+    void sprayAllTheThings();
 };
 
 

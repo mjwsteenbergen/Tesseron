@@ -3,7 +3,7 @@
 		<!-- launch-prefix="gdb -ex run - -args" -->
 		<param name="motor_port" value="motor_comm"/>
 		<param name="motor_config" value="$(find base_catkin)/cfg/wheels.xml"/>
-		<param name="wheel_diameter" value="0.15"/>
+		<param name="wheel_diameter" value="0.075"/>
 		<param name="wheel_base" value="0.535"/>
 	</node>
 </launch>

@@ -13,8 +13,12 @@
 #include <gripper/MoveGripperRequest.h>
 #include <gripper/MoveGripperResponse.h>
 #include <geometry_msgs/Twist.h>
+#include <std_srvs/TriggerRequest.h>
+#include <std_srvs/TriggerResponse.h>
+#include <std_srvs/Trigger.h>
 #include "DynamixelMotor.h"
 #include "Threemxl.h"
+#include "Glue.h"
 
 
 class Gripper {
@@ -26,6 +30,7 @@ protected:
     ros::ServiceServer LaydownClient;
     ros::ServiceServer PickUpClient;
     ros::ServiceServer MoveClient;
+    ros::ServiceServer GlueClient;
 
     ros::Publisher initPublisher;
 
@@ -53,6 +58,7 @@ public:
     DynamixelMotor MX;
     DynamixelMotor RX;
     Threemxl spindle;
+    Glue glue;
 
 
     void sendErrorMessage(const std::string message, const std::string sender);
@@ -85,7 +91,11 @@ public:
 
     void BlockingSpindle(double distance);
 
+    void sprayGlue();
+
     bool handleMove(double spindlePos, double MXPos);
+
+    bool handleGlue(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 };
 
 

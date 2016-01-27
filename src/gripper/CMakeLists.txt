@@ -31,7 +31,7 @@ generate_messages(
         std_msgs  # Or other packages containing msgs
 )
 
-add_executable(gripper src/Gripper.cpp src/DynamixelMotor.cpp src/Threemxl.cpp src/Threemxl.h)
+add_executable(gripper src/Gripper.cpp src/DynamixelMotor.cpp src/Threemxl.cpp src/Threemxl.h src/Glue.cpp src/Glue.h)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 

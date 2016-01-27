@@ -171,7 +171,7 @@ void Threemxl::loopOnce()
 
     double speed = current_pos - gotoPos;
 
-    spindle->setAcceleration(20, false);
+    spindle->setAcceleration(60, false);
 
 //    double pp = spindle->presentPos();
     if(spindle->present3MxlMode() != SPEED_MODE)
@@ -180,15 +180,15 @@ void Threemxl::loopOnce()
     }
     if(fabs(speed) > 0.1)
     {
-        if(speed > 30) //TODO CHECK ME
+        if(speed > 60) //TODO CHECK ME
         {
-            spindle->setSpeed(-30, false);
+            spindle->setSpeed(-60, false);
         }
         else
         {
-            if(speed < -30)
+            if(speed < -60)
             {
-                spindle->setSpeed(30);
+                spindle->setSpeed(60);
             }
             else{
                 spindle->setSpeed(-speed, false);

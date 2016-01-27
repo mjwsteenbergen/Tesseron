@@ -12,6 +12,7 @@
 #include "dynamixel_controllers/SetSpeed.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/Bool.h"
+#include "std_srvs/Trigger.h"
 #include "DynamixelMotor.h"
 #include <iostream>
 #include <string>
@@ -32,9 +33,10 @@ void Gripper::sendErrorMessage(const std::string message_body, const std::string
 
 void Gripper::init()
 {
-    LaydownClient = nh_.advertiseService("/laydown", &Gripper::handleLayDown, this);
-    PickUpClient  = nh_.advertiseService("/pickup" , &Gripper::handlePickUp, this );
-    MoveClient    = nh_.advertiseService("/Gripper" ,&Gripper::handleMove, this );
+    LaydownClient = nh_.advertiseService("/laydown",  &Gripper::handleLayDown, this);
+    PickUpClient  = nh_.advertiseService("/pickup" ,  &Gripper::handlePickUp, this );
+    MoveClient    = nh_.advertiseService("/Gripper",  &Gripper::handleMove, this );
+    GlueClient    = nh_.advertiseService("/SprayGlue",&Gripper::handleGlue, this);
 
     speedTopic = nh_.subscribe("/grippercontrol", 1, &Gripper::TwistCallback, this);
 
@@ -60,8 +62,13 @@ void Gripper::init()
 
 
 bool Gripper::initialise() {
+    glue.init();
+
+    return false;
+
     RX.setMotorName("/tilt_controller/", 15E-3, 1);
     RX.initCompleted();
+    RX.setMultiplier(2.0);
     handlePickup(true);
 
     ros::Rate sleep(5);
@@ -130,6 +137,15 @@ void Gripper::BlockingSpindle(double distance)
     }
 }
 
+bool Gripper::handleGlue(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+
+    sprayGlue();
+
+    res.success = (unsigned char) false;
+    return true;
+}
+
 bool Gripper::handleLayDown(gripper::LayDown::Request &req, gripper::LayDown::Response &res)
 {
     //TODO
@@ -169,7 +185,7 @@ void Gripper::handlePickup(bool fully) {
     }
     else
     {
-        BlockingRX(0.119);
+        BlockingRX(0.1186);
     }
 }
 
@@ -257,6 +273,8 @@ int main(int argc, char **argv)
     ROS_INFO("BOOTING...");
     ros::init(argc, argv, "Gripper");
     Gripper grip;
+
+
 //    grip.MX.gotoPosition(0.2);
 //    grip.handleLayDown(true);
 //    grip.handleMove(-0.16,0.13);
@@ -268,7 +286,7 @@ int main(int argc, char **argv)
 
 //    grip.handlePickup(true);
 //    grip.moveToShutdown();
-    grip.loop();
+//    grip.loop();
 //    gripper::MoveGripperRequest req;
 
 }
@@ -281,4 +299,16 @@ void Gripper::TwistCallback(const geometry_msgs::Twist::ConstPtr &msg) {
         spindle.setManualControl(true);
         setSpeed(msg->linear.x, msg->linear.y * 5, msg->angular.z);
     }
+}
+
+void Gripper::sprayGlue() {
+    glue.on();
+
+    ros::Rate sleep(1.0/0.3);
+    sleep.sleep();
+
+    glue.off();
+    sleep.sleep();
+
+    glue.detach();
 }

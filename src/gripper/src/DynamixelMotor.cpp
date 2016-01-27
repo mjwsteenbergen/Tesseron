@@ -93,7 +93,7 @@ void DynamixelMotor::initCompleted()
 void DynamixelMotor::runIntoLimit()
 {
     setSpeed(-0.7);
-    ros::Rate sleep(0.7);
+    ros::Rate sleep(1);
     sleep.sleep();
 
 //    ros::Rate waitRate(0.1);
@@ -102,7 +102,7 @@ void DynamixelMotor::runIntoLimit()
 
 void DynamixelMotor::limitCheck() {
     double diff = fabs(lastPosition - currentPosition);
-    if(diff < 0.01 && currentPosition != 0.0)
+    if(diff < 0.001 && currentPosition != 0.0)
     {
         initCompleted();
         completed = true;
@@ -158,7 +158,7 @@ void DynamixelMotor::positionCallback(const dynamixel_msgs::JointState::ConstPtr
         int i = 0;
     }
 
-    if(fabs(currentPosition) > 1E-31){
+    if(initiased){
         if(fabs(cur_pos - currentPosition) > 2)
         {
             if((currentPosition - cur_pos) > 0){

@@ -45,6 +45,8 @@ class Base {
 	double			wheel_diameter_;
 	double			wheel_base_;
 
+	float			cur_pos;
+
 	bool			mode_pos_;
 
   protected:
@@ -86,6 +88,9 @@ class Base {
 	void initService();
 	void sendInitMessage();
 	void initBase();
+	void move(double d);
+
+	void setSpeed(double speedLeft, double speedRight);
 
 };
 

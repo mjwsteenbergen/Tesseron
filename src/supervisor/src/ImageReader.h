@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const int MOSAIC_SIZE = 4;
+const int MOSAIC_SIZE = 16;
 
 class ImageReader {
 public:

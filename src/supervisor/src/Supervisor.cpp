@@ -10,6 +10,7 @@
 #include "JoyStick.h"
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Char.h>
+#include <std_srvs/Trigger.h>
 #include <sensor_msgs/Joy.h>
 
 
@@ -79,10 +80,11 @@ void Supervisor::toAutomaticControl() {
     wheelService = n.serviceClient<supervisor::Wheel>("/base/Wheels");
     layDownService = n.serviceClient<supervisor::LayDown>("/laydown");
     pickUpService = n.serviceClient<supervisor::PickUp>("/pickup");
+    pickUpService = n.serviceClient<std_srvs::Trigger>("/SprayGlue");
 
     tile_pusherService = n.advertise<std_msgs::Char>("/pushtile", 5);
 
-    //testAllTheThings();
+//    testAllTheThings();
 }
 
 void Supervisor::testAllTheThings()
@@ -94,8 +96,11 @@ void Supervisor::testAllTheThings()
 //    supervisor::MoveGripper req1;
 //    gripperService.call(req1);
 //
+
+//    moveBack(0.025);
+
 //    supervisor::Wheel req2;
-//    req2.request.distance = 0.0;
+//    req2.request.distance = 0.025;
 //    wheelService.call(req2);
 //
 //    supervisor::LayDown req3;
@@ -104,27 +109,27 @@ void Supervisor::testAllTheThings()
 //    supervisor::PickUp req4;
 //    pickUpService.call(req4);
 
-    std_msgs::Char pub1;
-    pub1.data = 'A';
-    tile_pusherService.publish(pub1);
+//    std_msgs::Char pub1;
+//    pub1.data = 'A';
+//    tile_pusherService.publish(pub1);
 
     ros::spinOnce();
     sleep.sleep();
 
-    pub1.data = 'B';
-    tile_pusherService.publish(pub1);
+//    pub1.data = 'B';
+//    tile_pusherService.publish(pub1);
+//
+//    ros::spinOnce();
+//    sleep.sleep();
 
-    ros::spinOnce();
-    sleep.sleep();
+//    pub1.data = 'C';
+//    tile_pusherService.publish(pub1);
 
-    pub1.data = 'C';
-    tile_pusherService.publish(pub1);
+//    ros::spinOnce();
+//    sleep.sleep();
 
-    ros::spinOnce();
-    sleep.sleep();
-
-    pub1.data = 'D';
-    tile_pusherService.publish(pub1);
+//    pub1.data = 'D';
+//    tile_pusherService.publish(pub1);
 
 
 //    geometry_msgs::Twist pub2;
@@ -153,29 +158,50 @@ void Supervisor::layFloor() {
     char image[MOSAIC_SIZE][MOSAIC_SIZE];
     getInstructions(image);
 
-//    for(int i = 0; i < MOSAIC_SIZE; i++)
-//    {
+    ros::Rate sleep(0.66);
+
+    for(int i = 0; i < MOSAIC_SIZE; i++)
+    {
         //TODO add webcam
         for(int j = 0; j < MOSAIC_SIZE; j++)
         {
-            getTile(image[0][j]);
-            getGlue();
-            moveTo(-0.03, 0.10 + j*0.025);
+            getTile(image[i][j]);
+            moveTo(-0.03, 0.10 + j*0.028);
             layTile(false);
 //            ros::Rate sleep(0.3);
 //            sleep.sleep();
             readyNextTile('-');
 
-            ros::Rate sleep(0.66);
+            sleep.sleep();
             sleep.sleep();
 
             pickupTile(true);
+
+
         }
-//        moveBack(3);
-//    }
+        sleep.sleep();
+        sleep.sleep();
+        moveBack(0.028);
+    }
 }
 
-void Supervisor::moveBack(int distance) {
+void Supervisor::sprayAllTheThings()
+{
+    std_srvs::Trigger srv;
+    if (glueService.call(srv))
+    {
+        if(!srv.response.success)
+        {
+            ROS_ERROR("There was an error, while calling glueService: %s", srv.response.message.c_str());
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service wheelService");
+    }
+}
+
+void Supervisor::moveBack(float distance) {
 
     supervisor::Wheel srv;
     srv.request.distance = distance;
@@ -221,7 +247,7 @@ void Supervisor::layTile(bool b) {
     {
         if(!srv.response.succeeded)
         {
-            ROS_ERROR("There was an error, while calling wheelService: %s", srv.response.error.c_str());
+            ROS_ERROR("There was an error, while calling layDownService: %s", srv.response.error.c_str());
         }
     }
     else
@@ -284,9 +310,8 @@ void Supervisor::moveBackFrom(char color)
 
 void Supervisor::getGlue()
 {
-//    5.84
-    //8.02
     moveTo(-0.16, 0.17 + 0.0802);
+    sprayAllTheThings();
 }
 
 void Supervisor::getTile(char i) {
@@ -300,6 +325,7 @@ void Supervisor::getTile(char i) {
     sleep.sleep();
 
     pickupTile(true);
+    getGlue();
     //moveBackFrom(i);
     readyNextTile(i);
 }
